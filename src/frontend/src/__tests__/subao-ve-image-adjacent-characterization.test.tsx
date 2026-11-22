@@ -1,0 +1,606 @@
+import "@testing-library/jest-dom/vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+/**
+ * Characterization of the behavior ADJACENT to the Subao Ve image wiring,
+ * taken BEFORE the change lands.
+ *
+ * The request intentionally adds:
+ *   - a Subao Ve effect image over the chessboard when a Subao Ve cast grants
+ *     protection to the caster;
+ *   - the supplied Subao Ve image as the Subao Ve entry's artwork in the spell
+ *     collection UI;
+ *   - a wordmark bump to `jalca v322`.
+ *
+ * Those are the intentional changes, so this file deliberately does NOT pin
+ * what a Subao Ve cast currently renders on the board, what the Subao Ve row
+ * currently shows in the collection UI, or the current numeric version.
+ *
+ * What IS protected is the adjacent behavior the change must not disturb:
+ *   - the five existing fire-spell overlay mappings (Tia Lua..Mua Lua ->
+ *     spell ids 10..14) keep rendering their own effect image;
+ *   - a cast cancelled by a shield keeps rendering the reserved blocked image
+ *     (the requirement restates this existing behavior, so it is a protected
+ *     invariant, not the change);
+ *   - a fired cast of a spell with no board-effect mapping still shows no
+ *     overlay;
+ *   - the collection UI keeps showing the existing Balls and Lua fire spell
+ *     images and keeps rendering no image for an unmapped spell;
+ *   - the wordmark stays composed from the single `JALCA_VERSION` constant and
+ *     renders the same string at both sites.
+ *
+ * The backend actor is a typed local mock (or absent entirely for the pure
+ * rendering surfaces), so this is component/integration coverage of the
+ * frontend's rendering — not real backend behavior. See episode.coverageLimits.
+ */
+
+// The Chessboard and the collection windows import enum values from @/backend
+// at runtime, which transitively pulls in @caffeineai/object-storage and
+// @caffeineai/core-infrastructure. Those packages fail to resolve their own
+// submodules in the jsdom test environment (a pre-existing dependency issue),
+// so mock the backend module with the enum values the components need.
+vi.mock("@/backend", () => ({
+  SpellComplexity: { Easy: "Easy", Complex: "Complex", Moderate: "Moderate" },
+  SpellCategory: {
+    Block: "Block",
+    Major: "Major",
+    Minor: "Minor",
+    Balls: "Balls",
+  },
+  SpellKind: {
+    Major: "Major",
+    Minor: "Minor",
+    SubaoVe: "SubaoVe",
+    Balls: "Balls",
+  },
+  LegacyReason: {
+    keysAbsent: "keysAbsent",
+    wrongType: "wrongType",
+    keysDisagree: "keysDisagree",
+    readFailed: "readFailed",
+  },
+  BurnedSpellCategory: {
+    Major: "Major",
+    Minor: "Minor",
+    SubaoVe: "SubaoVe",
+    Balls: "Balls",
+  },
+  BallsColourFamily: {
+    Sandy: "Sandy",
+    Cloudy: "Cloudy",
+    Grassy: "Grassy",
+    Fiery: "Fiery",
+    Wooden: "Wooden",
+  },
+  OpponentBoardImage: { Hairy: "Hairy", Veiny: "Veiny", Shiny: "Shiny" },
+  Team: { Black: "Black", White: "White" },
+  SpellUse: { On: "On", Off: "Off" },
+  PieceType: {
+    Bishop: "Bishop",
+    King: "King",
+    Pawn: "Pawn",
+    Rook: "Rook",
+    Knight: "Knight",
+    Queen: "Queen",
+  },
+  WalletSource: { typed: "typed", none: "none", oisy: "oisy" },
+  SpellResolutionOutcome: {
+    fired: "fired",
+    cancelled: "cancelled",
+    legacy: "legacy",
+  },
+}));
+
+// AdvicePopup -> lib/backend-actor imports createActorWithConfig from
+// @caffeineai/core-infrastructure, which also fails to resolve its own
+// submodules in jsdom. The surfaces under test never call the actor directly.
+vi.mock("@caffeineai/core-infrastructure", () => ({
+  createActorWithConfig: vi.fn(),
+}));
+
+import {
+  type BurnAndPlayResult,
+  type Piece,
+  type PieceType,
+  type PlayerInfo,
+  SpellKind,
+  SpellResolutionOutcome,
+  Team,
+  WalletSource,
+} from "@/backend";
+import { Chessboard } from "@/components/Chessboard";
+
+const EMPTY_BOARD: Array<Piece | null> = Array.from({ length: 64 }, () => null);
+
+const WHITE_PLAYER: PlayerInfo = {
+  principal: "player-1",
+  username: "Ada",
+  team: Team.White,
+  walletSource: WalletSource.none,
+  isMoveMaker: false,
+  isFresh: false,
+  isInactive: false,
+  isBot: false,
+};
+
+/** A minimal board with a single White rook on a1 so the grid renders. */
+function boardWithRook(): Array<Piece | null> {
+  const board = [...EMPTY_BOARD];
+  board[0] = {
+    pieceType: "Rook" as PieceType,
+    color: Team.White,
+    summoned: false,
+  };
+  return board;
+}
+
+/** A fired burn-and-play result for the given spell name. */
+function firedResult(spellName: string): BurnAndPlayResult {
+  return {
+    tokenId: 42n,
+    spellName,
+    gameNumber: 7n,
+    team: Team.White,
+    kind: SpellKind.Major,
+    resolution: {
+      attacker: Team.White,
+      defender: Team.Black,
+      spellValue: 5n,
+      shieldBefore: 0n,
+      shieldAfter: 0n,
+      outcome: SpellResolutionOutcome.fired,
+      firesOnBoard: true,
+    },
+    removedSquares: [],
+    insufficientMaterial: false,
+    transformedSquares: [],
+  };
+}
+
+/** A burn-and-play result cancelled by a shield. */
+function cancelledResult(spellName: string): BurnAndPlayResult {
+  return {
+    tokenId: 43n,
+    spellName,
+    gameNumber: 7n,
+    team: Team.White,
+    kind: SpellKind.Major,
+    resolution: {
+      attacker: Team.White,
+      defender: Team.Black,
+      spellValue: 5n,
+      shieldBefore: 5n,
+      shieldAfter: 0n,
+      outcome: SpellResolutionOutcome.cancelled,
+      firesOnBoard: false,
+    },
+    removedSquares: [],
+    insufficientMaterial: false,
+    transformedSquares: [],
+  };
+}
+
+function renderBoard(lastBurnAndPlay: BurnAndPlayResult | null) {
+  return render(
+    <Chessboard
+      board={boardWithRook()}
+      turn={Team.White}
+      moveMaker="maker-1"
+      currentPlayer={WHITE_PLAYER}
+      onMove={() => {}}
+      orientation={Team.White}
+      selectedSquareProp={null}
+      destinationSquareProp={null}
+      pendingPromotionPieceProp={null}
+      lastBurnAndPlay={lastBurnAndPlay}
+    />,
+  );
+}
+
+/** The spell-effect overlay is the only element carrying the
+ * `data-ocid="chess.spell_effect"` marker. */
+function spellOverlay(container: HTMLElement): HTMLElement | null {
+  return container.querySelector<HTMLElement>(
+    '[data-ocid="chess.spell_effect"]',
+  );
+}
+
+/** Stub ResizeObserver so the board measures a deterministic 800px width. */
+function stubResizeObserver(width: number) {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      private cb: ResizeObserverCallback;
+      constructor(cb: ResizeObserverCallback) {
+        this.cb = cb;
+      }
+      observe(el: Element) {
+        Object.defineProperty(el, "clientWidth", {
+          configurable: true,
+          value: width,
+        });
+        this.cb([], this as unknown as ResizeObserver);
+      }
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+}
+
+function stubMatchMedia(reducedMotion: boolean) {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn().mockReturnValue({
+      matches: reducedMotion,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    }),
+  );
+}
+
+describe("Chessboard spell-effect overlay adjacent to the Subao Ve image", () => {
+  beforeEach(() => {
+    stubResizeObserver(800);
+    stubMatchMedia(false);
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it("keeps each of the five fire spells mapped to its own effect image", () => {
+    const spells: Array<[string, number]> = [
+      ["Tia Lua", 10],
+      ["Cau Lua", 11],
+      ["Hoa Boc", 12],
+      ["Buc Tung Lua", 13],
+      ["Mua Lua", 14],
+    ];
+
+    for (const [spellName, spellId] of spells) {
+      const { container, unmount } = renderBoard(firedResult(spellName));
+      const overlay = spellOverlay(container);
+      expect(overlay, `${spellName} should show an overlay`).not.toBeNull();
+      expect(overlay).toHaveClass(`spell-effect-${spellId}`);
+      unmount();
+    }
+  });
+
+  it("shows the supplied Spell blocked image when a cast is cancelled by a shield", () => {
+    const { container } = renderBoard(cancelledResult("Tia Lua"));
+
+    const overlay = spellOverlay(container);
+    expect(overlay).not.toBeNull();
+    // The accepted behavior uses the supplied Spell blocked image
+    // (`spell-effect-spell-blocked`), not the older reserved blocked image.
+    expect(overlay).toHaveClass("spell-effect-spell-blocked");
+    // The blocked image replaces the spell's own effect image.
+    expect(overlay).not.toHaveClass("spell-effect-10");
+  });
+
+  it("keeps showing no overlay for a fired cast with no board-effect mapping", () => {
+    const { container } = renderBoard(firedResult("Some Other Spell"));
+
+    expect(spellOverlay(container)).toBeNull();
+  });
+
+  it("keeps clearing the overlay 4s after the pre-roll hands off", () => {
+    vi.useFakeTimers();
+    const { container } = renderBoard(firedResult("Tia Lua"));
+
+    // The 3s pre-roll plays first; the spell image is suppressed until it
+    // completes, then its own 4s window starts.
+    expect(spellOverlay(container)).toHaveClass(
+      "spell-effect-overlay-suppressed",
+    );
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(spellOverlay(container)).not.toHaveClass(
+      "spell-effect-overlay-suppressed",
+    );
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
+    expect(spellOverlay(container)).toBeNull();
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Collection UI image mapping (adjacent to the Subao Ve artwork)      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A spell table fixture carrying the existing image-mapped spells (the three
+ * Balls spells and the five Lua fire spells) plus one spell with no image
+ * mapping. The Subao Ve entry is the intentional change and is deliberately
+ * not asserted here.
+ */
+const { spellTable } = vi.hoisted(() => ({
+  spellTable: {
+    block: {
+      id: 0n,
+      complexity: "Easy",
+      nftEligible: true,
+      meaning: "Protection",
+      name: "Subao Ve",
+      spell: "Preemptively sets up a shield.",
+      category: { Block: null },
+      dropChance: 8n,
+    },
+    minor: [
+      {
+        id: 3n,
+        complexity: "Easy",
+        nftEligible: true,
+        meaning: "Plague",
+        name: "Bendika",
+        spell: "Removes all remaining enemy Pawns from the board.",
+        category: { Minor: null },
+        dropChance: 10n,
+      },
+    ],
+    major: [
+      {
+        id: 1n,
+        complexity: "Moderate",
+        nftEligible: false,
+        meaning: "Queen horse",
+        name: "Newkai Dodan",
+        spell: "Replaces the enemy Queen with an enemy Knight.",
+        category: { Major: null },
+        dropChance: 2n,
+      },
+      {
+        id: 10n,
+        complexity: "Easy",
+        nftEligible: true,
+        meaning: "Fire",
+        name: "Tia Lua",
+        spell: "A Lua fire spell.",
+        category: { Major: null },
+        dropChance: 5n,
+      },
+      {
+        id: 11n,
+        complexity: "Easy",
+        nftEligible: true,
+        meaning: "Fire",
+        name: "Cau Lua",
+        spell: "A Lua fire spell.",
+        category: { Major: null },
+        dropChance: 5n,
+      },
+      {
+        id: 12n,
+        complexity: "Easy",
+        nftEligible: true,
+        meaning: "Fire",
+        name: "Hoa Boc",
+        spell: "A Lua fire spell.",
+        category: { Major: null },
+        dropChance: 5n,
+      },
+      {
+        id: 13n,
+        complexity: "Easy",
+        nftEligible: true,
+        meaning: "Fire",
+        name: "Buc Tung Lua",
+        spell: "A Lua fire spell.",
+        category: { Major: null },
+        dropChance: 5n,
+      },
+      {
+        id: 14n,
+        complexity: "Easy",
+        nftEligible: true,
+        meaning: "Fire",
+        name: "Mua Lua",
+        spell: "A Lua fire spell.",
+        category: { Major: null },
+        dropChance: 5n,
+      },
+    ],
+    balls: [
+      {
+        id: 31n,
+        complexity: "Easy",
+        nftEligible: true,
+        meaning: "Hairy Balls",
+        name: "Hairy Balls",
+        spell: "An offensive Balls spell.",
+        category: { Balls: null },
+        dropChance: 0n,
+      },
+      {
+        id: 32n,
+        complexity: "Easy",
+        nftEligible: true,
+        meaning: "Veiny Balls",
+        name: "Veiny Balls",
+        spell: "An offensive Balls spell.",
+        category: { Balls: null },
+        dropChance: 0n,
+      },
+      {
+        id: 33n,
+        complexity: "Easy",
+        nftEligible: true,
+        meaning: "Shiny Balls",
+        name: "Shiny Balls",
+        spell: "An offensive Balls spell.",
+        category: { Balls: null },
+        dropChance: 0n,
+      },
+    ],
+  },
+}));
+
+const { getSpellTable, useActorState, useGameState, useBurnState } = vi.hoisted(
+  () => ({
+    getSpellTable: vi.fn(),
+    useActorState: vi.fn(),
+    useGameState: vi.fn(),
+    useBurnState: vi.fn(),
+  }),
+);
+
+vi.mock("@/lib/backend-actor", () => ({
+  useActorState,
+  getActor: vi.fn().mockResolvedValue({ getSpellTable }),
+}));
+vi.mock("@/hooks/use-game-state", () => ({ useGameState }));
+vi.mock("@/hooks/use-burn-state", () => ({ useBurnState }));
+
+// OisyBurnPanel is a large surface owned by the isolated Oisy feature; mock it
+// to a marker so this file stays focused on the spell table.
+vi.mock("@/oisy-burn/OisyBurnPanel", () => ({
+  OisyBurnPanel: () => <div data-testid="oisy-burn-panel" />,
+}));
+
+import { SpellUse } from "@/backend";
+import { WalletConnectionWindow } from "@/components/WalletConnectionWindow";
+
+/** The existing image-mapped spells and the asset each must keep rendering. */
+const EXISTING_IMAGE_SPELLS = [
+  { name: "Hairy Balls", image: "/assets/spells/hairy-balls.png" },
+  { name: "Veiny Balls", image: "/assets/spells/veiny-balls.png" },
+  { name: "Shiny Balls", image: "/assets/spells/shiny-balls.png" },
+  { name: "Tia Lua", image: "/assets/spells/10.png" },
+  { name: "Cau Lua", image: "/assets/spells/11.png" },
+  { name: "Hoa Boc", image: "/assets/spells/12.png" },
+  { name: "Buc Tung Lua", image: "/assets/spells/13.png" },
+  { name: "Mua Lua", image: "/assets/spells/14.png" },
+] as const;
+
+/** A spell with no image mapping — must render no <img>.
+ * "Newkai Dodan" (id 1) is not one of the spells this change maps; "Bendika"
+ * is now intentionally mapped to /assets/spells/3.png. */
+const NO_IMAGE_SPELL = "Hipsy Tan Chin";
+
+function renderWindow() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <WalletConnectionWindow spellUse={SpellUse.On} />
+    </QueryClientProvider>,
+  );
+}
+
+/** Open the info panel, then the spell table modal. */
+async function openSpellTable(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(
+    screen.getByRole("button", { name: /Toggle NFT wallet information/i }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: /Spell names and effects/i }),
+  );
+  return screen.findByRole("dialog");
+}
+
+/** The row whose text contains the given spell name. The modal is portaled to
+ * document.body, so rows are queried there rather than in the render
+ * container. */
+function rowFor(_container: HTMLElement, name: string): HTMLElement {
+  const rows = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-ocid^='spell_table.row.']"),
+  );
+  const row = rows.find((r) => r.textContent?.includes(name));
+  if (row === undefined) throw new Error(`no spell table row for ${name}`);
+  return row;
+}
+
+describe("spell collection UI image mapping adjacent to the Subao Ve artwork", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    getSpellTable.mockResolvedValue(spellTable);
+    useActorState.mockReturnValue({
+      actor: { getSpellTable },
+      isLoading: false,
+      error: null,
+      retry: () => {},
+    });
+    useGameState.mockReturnValue({
+      data: { moveMaker: "player-1", turn: "White" },
+      isLoading: false,
+      error: null,
+      moves: [],
+      lastMove: null,
+      prevBoard: null,
+      checkSquare: null,
+    });
+    useBurnState.mockReturnValue({
+      data: { burnOccurredThisTurn: false },
+      isLoading: false,
+      error: null,
+    });
+  });
+
+  afterEach(() => {
+    cleanup();
+    window.localStorage.clear();
+    vi.clearAllMocks();
+  });
+
+  it("keeps showing each existing image-mapped spell's own PNG in its row", async () => {
+    const user = userEvent.setup();
+    const { container } = renderWindow();
+
+    await openSpellTable(user);
+
+    for (const spell of EXISTING_IMAGE_SPELLS) {
+      const row = rowFor(container, spell.name);
+      const img = row.querySelector("img");
+      expect(img, `${spell.name} should render an image`).not.toBeNull();
+      expect(img).toHaveAttribute("src", spell.image);
+    }
+  });
+
+  it("keeps rendering no image element for a spell with no image mapping", async () => {
+    const user = userEvent.setup();
+    const { container } = renderWindow();
+
+    await openSpellTable(user);
+
+    const row = rowFor(container, NO_IMAGE_SPELL);
+    expect(within(row).getByText(NO_IMAGE_SPELL)).toBeInTheDocument();
+    expect(row.querySelector("img")).toBeNull();
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Wordmark composition seam (adjacent to the version bump)            */
+/* ------------------------------------------------------------------ */
+
+import { Wordmark } from "@/components/Wordmark";
+import { JALCA_VERSION, JALCA_WORDMARK } from "@/lib/version";
+
+describe("wordmark composition seam adjacent to the version bump", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("keeps composing the wordmark from the single version constant", () => {
+    expect(JALCA_WORDMARK).toBe(`jalca ${JALCA_VERSION}`);
+  });
+
+  it("keeps the version tag in the v<digits> shape", () => {
+    expect(JALCA_VERSION).toMatch(/^v\d+$/);
+  });
+
+  it("keeps rendering the composed string as visible text and aria-label", () => {
+    render(<Wordmark />);
+    const el = screen.getByText(JALCA_WORDMARK);
+    expect(el).toHaveAttribute("aria-label", JALCA_WORDMARK);
+  });
+});

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Team Chess Online</title>
+    <meta
+      name="description"
+      content="Team Chess Online — play team chess with spells, betting, and live matches against players around the world."
+    />
+    <meta property="og:title" content="Team Chess Online" />
+    <meta
+      property="og:description"
+      content="Team Chess Online — play team chess with spells, betting, and live matches against players around the world."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <!--
+      FOUC prevention — apply the saved theme class to <html> BEFORE first
+      paint so the page never flashes the wrong theme. Reads the same
+      localStorage key ('theme') as the useTheme hook in
+      src/hooks/use-theme.ts. Defaults to light (no class) when no value is
+      saved or storage is unavailable. Must run synchronously in <head>
+      before the app script so styles resolve on the very first frame.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var root = document.documentElement;
+          // Strip every non-light theme class before applying the active one.
+          // Light is the default and uses no class.
+          root.classList.remove(
+            "dark",
+            "dark-neon",
+            "theme-fire",
+            "theme-water",
+            "theme-bubblegum"
+          );
+          if (stored === "dark") {
+            root.classList.add("dark");
+          } else if (stored === "dark-neon") {
+            root.classList.add("dark-neon");
+          } else if (stored === "fire") {
+            root.classList.add("theme-fire");
+          } else if (stored === "water") {
+            root.classList.add("theme-water");
+          } else if (stored === "bubblegum") {
+            root.classList.add("theme-bubblegum");
+          }
+          // 'light' or any unknown/null value → no class (the :root tokens apply).
+        } catch (e) {
+          // localStorage unavailable (private mode, disabled) — leave <html>
+          // classless so the default light theme renders.
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-MakmSZ_7.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DGdW9BFK.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

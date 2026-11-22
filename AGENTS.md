@@ -1,0 +1,433 @@
+# Project Guidance
+
+## User Preferences
+
+- Reuse the existing collapsible window component, styling, spacing and expand/collapse behavior so a new panel looks identical to its siblings
+- Prefer reusing an existing backend query and change no backend code when one already serves the need
+- Do not change guest login behavior
+- Do not touch existing test files except to add tests
+- Run both suites before and after and report failing test names against the documented 74 frontend and 7 backend baselines
+- Report which files changed, whether any backend or migration change was made, the test results, and anything that could not be verified
+- Stop before publishing and report the migration filename, its exact new fields, and confirmation that the OldActor matches the deployed 20261007_000000.mo shape; do not publish until approved
+- Reuse the existing collapsible window component, styling, spacing and expand/collapse behavior so a panel looks identical to its siblings
+- Stop before publishing and report the migration filename, its exact new fields, and confirmation that the OldActor matches the deployed 20261016_000001.mo shape; do not publish until approved
+- Mark every added test as written, not executed, and never claim a test passes when the shell cannot run the suites
+- Report first, then build: report the hardcoded principal in prizeAdmin() and why the panel shows on the draft URL before changing anything
+- The player block's query must not return the pool, fees, or any principal; report which endpoint the player block reads from
+- Use the canister's clock, not the browser's, for all Sunday date rules
+- Add no new migration if the existing allocation store suffices; if anything new is needed, report the filename and exact fields before doing it
+- Use the canister's clock, not the browser's, for all competition-day date rules
+- Add no new migration if the existing stores suffice; if anything new is needed, report the filename and exact fields before doing it
+- Stop before publishing and report the findings; do not publish until approved
+- Frontend and backend only; do not touch All time, the competition ranking, the allocation panel, guest login, or existing fields
+- Existing tests may be added to, and only the renamed strings may change
+- Mark each added test written, not executed, if it cannot run
+- Do not publish
+- Report the migration filename, its exact new fields, and a field-by-field OldActor match before changing code
+- All tests use a mocked prize canister; nothing calls the real prize canister during the build
+- The amount sent to the prize canister comes only from the stored prize, never from the browser
+- The competition value sent to the prize canister is the exact archive key timestamp
+- Frontend-only changes: no backend change and no migration
+- Do not change guest login, All time, the competition ranking, the allocation panel, the prize claim flow, or existing fields
+- Existing tests may only be added to, never edited
+- Mark backend-dependent tests 'written, not executed'
+- Report files changed, test status for each added test, and anything unverified
+- The login page uses a single Player/Spectator toggle with Player as the default, replacing any separate spectator button
+- Spectator polling runs at 5000ms through the shared getGamePollMs() helper; players stay at 1500ms
+- The wordmark version tag is a single constant; bump it in one place rather than editing rendered text
+- Report findings before changing code when a problem is reported
+- Do not alter what login() or loginRanked() do
+- Do not change any competition rule
+- Do not insert, edit or backfill any win or allocation
+- Show the changed files and behaviours, run the frontend tests, and confirm the deploy touches no backend code or stored data before deploying
+- The Ranked/Guest badge, the game route key and the Comp card must follow a session flag set at login and cleared at logout, not the mere presence of the ranked slot
+- Guest login must clear the ranked slot before logging in as guest
+- On app load, a ranked slot with no session flag is cleared so a stale browser rejoins cleanly
+- Mark backend-dependent tests 'written, not executed' when the shell cannot run them
+- Backend-only fix: no migration, no stored-data change, no deploy; type check only
+- Report the draft version, the full diff against v374, and a re-trace of the competition boundary table with the fix, then stop
+- Do not touch competitionStart, nextStart, isLive, archiveCompetition, recordWins or recordCompWins
+- Crop only the unused white space on the left of each burning-animation frame; do not force a square, keep natural aspect
+- All three burning-animation frames must end up the same final dimensions so the wizard does not shift between frames
+- The crop box must be wide enough to include the full binary-code trail on frame 3; the same crop box applies to all three frames
+- Resize the burning frames to about 340x340, authored at 2x internally and displayed at 340x340 for high-DPI/mobile crispness
+- The burning loop is driven by the burn-pending state, not a fixed 3-second timer
+- The real spell image must win the render over the burning loop
+- The burning state is shown to all users, set when the backend accepts the burn and cleared when the spell resolves
+- Burning-animation placement and behavior match the existing spell overlays: over b6-g3, fade in/out, board stays clickable, no sound
+- Backend-only change: no migration, no stored-data change, no frontend change
+- No changes to applyMove or the removal helpers
+- Reply in five lines or fewer
+- New spell images cropped/resized to the same 512x342 as the existing spell images
+- The summoned-piece glow is permanent for that piece: it moves with the piece, clears when the piece is captured, and clears at game end
+- The glow is a yellow drop-shadow on the piece itself, not a square border and not an outline
+- No timers and no local UI state for the glow
+- Do not touch the bejgi-…-6ae principal used for story writer and prize admin
+- Story content, voting and the writer composer behavior stay unchanged
+- Frontend-only change: no backend change and no migration
+- Frontend-only for the mint-results fix; no backend change and no migration for that fix
+- No data migration needed for either fix
+- Build to the draft only; type check only, no tests, no deploy, no migration
+- Use the same admin check the other prize admin endpoints use
+- Call the prize canister the same way callPay does, with the same stored principal
+- Return a result type, not a trap
+- Read-only: never move funds or change any state
+- Report the draft version number, the full diff of every changed file, and confirmation that nothing else was touched (especially lib/sunday-comp.mo, recordWins, recordCompWins, loginRanked)
+- One item per message, and do not cut the code off mid-block
+- Frontend-only wording changes: no backend change and no migration
+- Build to the draft only; type check only, no tests, no deploy
+- Report the draft version number, the full diff of every changed file, and confirmation that nothing else was touched
+- Do not change guest login, All time, the competition ranking, or existing fields
+- Report files changed, whether any backend or migration change was made, the test results, and anything that could not be verified
+- The glow is a drop-shadow on the piece itself, not a square border and not an outline
+- Report whether the same pattern exists in the spell/burn path (burnAndPlay)
+- Build to the draft only; live stays on v401
+- Frontend only for this change: no backend, game logic, prize, escrow or wallet change
+- Do not delete StatusWindow.tsx, PlayerList.tsx, MoveHistory.tsx, CapturedTray.tsx, usePanelCollapse or PanelCollapseContext
+- Do not write any new tests; update only tests that render Layout, the game route or the guided tour, and only as much as needed
+- Do not delete test files; report a test that cannot reasonably be updated instead of removing it
+- Do not edit the guided tour; it skips missing targets
+- Do not call any data hook a second time
+- Reuse the existing .chess-board and .window-column classes so landscape sizing is inherited
+- Report files created, edited and left unused with one line per edit
+- Report the exact names of failing tests before and after, and which ones were updated
+- Report what to check in the draft: portrait and landscape, a spectator view, and a move being made
+- Do not write, add, edit or delete any tests in this stage
+- Reuse the existing landscape classes; do not add orientation rules
+- Do not use the old per-window localStorage open keys for the embedded path
+- Report files created and edited with one line per edit, anything unsure at runtime, and what to check in the draft
+- The board views bar order is Vote, Spells, Bet, Story, Leaderboard, Also on the IC
+- The wallet and spell-burning window is shown inside the board overlay through the same open-view mechanism as the other views, not as a collapsible window on the game screen
+- Frontend-only kick changes: no backend or Candid file change and no test file change
+- A spectator's Kick button stays visible and clickable and shows an informational toast instead of calling the backend
+- No Kick button on the viewer's own row
+- Kick rejections surface the backend error text in a toast
+- Do not write tests
+- Do not touch the burn path, the NFT canister, or any stable type
+- Make no Candid change and add no fields to SpellEntry or any Candid-exposed type
+- If a Candid or stable-type change cannot be avoided, stop and explain why before changing anything
+- Do not change dropChance fields
+- Report the final roll function and level lookup as code, the files changed, confirmation of no Candid or stable-type change, and any place the UI or in-game text describes the old odds
+- The spell list opens as a full-screen modal, not inside the board-sized overlay window
+- Each spell row shows the spell name with its category and level on one line beneath it, formatted like 'Necromancy · Skilled'
+- The spell list's left column is half the width of the right column
+- The spell list button inside the NFT spells information panel reads 'Spell names and effects'
+- For Hairy Balls, only refer to Hairy Balls; for Shiny Balls, only refer to Shiny Balls; for Veiny Balls, only refer to Veiny Balls — never group them as 'Hairy/Shiny/Veiny Balls'
+- Frontend-only wording and content changes: no backend change and no migration
+- Stop before publishing and report the migration filename, its exact new fields, and confirmation that the OldActor matches the deployed migration shape; do not publish until approved
+
+## Accepted Requirements
+
+- A 'Show guide' toggle on the login page, on by default, remembered in localStorage
+- Set a pending flag on guest and Internet Identity login only when the toggle is on
+- A 7-step guided tour on /game targeting existing windows by data-ocid
+- A '3 of 7' step counter
+- Back/Next controls with Back disabled on step 1 and 'Finish and play' on step 7
+- Skip via X button and Escape
+- A dimmed backdrop with a highlight ring around the target
+- A card portaled above the page using the global theme
+- Accessibility: modal dialog semantics, focus handling, Tab containment, capture-phase Escape
+- Reposition on resize/scroll and track target height changes
+- Skip a step whose target is missing
+- End the tour if the end-game modal or celebration overlay appears
+- A 'Replay guide' button in the layout controls row
+- Add tests only; do not edit existing tests
+- No backend or migration change; no edits to window components; guest login behavior unchanged
+- Fix the guided tour card's placement so it is visible next to the highlighted window without scrolling
+- Fix the tour scroll behavior so the page does not scroll back up away from the highlighted window
+- Fix the tour card placement and scroll behavior on both desktop and mobile
+- Set position: 'fixed' in the card's inline style so no CSS rule can override it
+- Stop relying on .window-card's position/overflow for the card; preserve its background, border, radius and shadow
+- Keep the card in viewport coordinates from getBoundingClientRect() only, clamped inside visualViewport bounds
+- Make window.scrollTo run only once per step change, keyed on [step.targetOcid, stepIndex]
+- Move viewport and resizeNonce handling into a separate effect that only updates the card's position and never scrolls
+- Guard the scroll with a last-scrolled-step ref as a backstop
+- Update tour step 1 text to 'Choose whether spells should used or not, and if you prefer Standard Opening or a Random Opening'
+- Update tour step 6 text to 'Read and, if signed in with Internet Identity, choose which pieces should be kept or deleted'
+- Update tour step 7 text to 'Sign in with Internet Identity and get ranked with accumulated wins. Watch out for prize competitions.'
+- Add a tour step highlighting the wizard/OpenChat icon with a very short explanation that clicking it opens the JALCA OpenChat channel
+- The highlighted window must not be blurred while a tour step is active
+- Add one new first step to the guided tour, prepended before the current step 1, titled JALCA with a highlight at the top of the tour card
+- The new first step's body text is exactly 'This is a multiplayer game without bots. A game can only begin when at least two players are logged in.'
+- No other tour step text changes
+- Keep the existing leaderboard as 'All time' and add a 'Sunday comp' view in the same Leaderboard window, switched by a toggle
+- Each competition runs Sunday 00:00:00 to 23:59:59 UTC
+- A win counts only if the game concludes inside that window, using the canister's time at conclusion
+- Sunday win rules are exactly the same as All time: bound Internet Identity principal, one count per principal per game, a double conclusion counts once, draws and absent players excluded, timeout wins count, anonymous callers and guests rejected
+- Every qualifying win also still counts toward All time; nothing about All time changes
+- The chessboard itself is never frozen or affected
+- Archive each competition's date (the Sunday, UTC), winner and runner-up, finalized lazily and idempotently exactly once
+- Store each winner's and runner-up's principal internally plus the username and win count at that moment; never return principals to the frontend
+- A competition with no wins archives no winner; a single winner archives no runner-up
+- Show a 'Past winners' table in the Sunday comp view: date, winner, runner-up and their win counts, newest first
+- Ranking: wins descending, ties broken by who reached that win count first
+- Name: the most recent username for the principal; the archive keeps the name as it was when the competition ended
+- Top 50, no principals returned, and the signed-in player's own row highlighted
+- Header text: 'Live, ends in 6h 12m' during the competition, or 'Final results, Sunday 18 Oct' with 'Next comp in 2d 5h' when frozen
+- Toggle default: Sunday comp while a competition is live, otherwise All time; remember the player's last manual choice per visit
+- Match the existing window's look and keep loading, error and empty states ('No wins yet this Sunday')
+- Don't change existing fields or All time behavior, and don't touch guest login; existing tests are only added to, never edited
+- A migration, if needed, adds new fields only and copies all existing data through unchanged; report it before publishing
+- Make the clock injectable so tests can control time
+- Add tests for the Sunday boundaries, cross-midnight conclusion, same-rules cases, reset, archive idempotency/no-winner/single-winner, no principals in public responses, tie-break and rename, and PocketIC upgrade
+- Run both suites before and after and report failing test names against the 74 frontend and 7 backend baselines
+- Stop before publishing and report the migration filename, its exact new fields, and confirmation that the OldActor matches the deployed 20261007_000000.mo shape; do not publish until approved
+- Add a test where several Sundays pass with no activity, then one read archives each of them in order, with a winner only for the Sundays that had wins
+- Add a test proving a failure in Sunday recording does not block or roll back All time recording or the game ending
+- Add a test proving no public response, including the Past winners table, contains a principal
+- Remove the bottom 'Shield +N / No Subao Ve burned yet' block from both team spell-burning windows because it duplicates the big centered Subao Ve counter
+- Rename 'Minor / Major spells' to 'Spells cast' and list every spell cast other than Subao Ve
+- Append a tick for a successful cast (Subao Ve did not prevent it), a cross for an unsuccessful cast (Subao Ve prevented it), and a question mark for a cast that had no effect on Subao Ve and did not land on the board
+- Subao Ve itself never appears in the list, only in the big counter
+- The list must scroll
+- No empty-state text
+- Add per-spell outcome data to the backend burn state and surface it to the frontend
+- Add admin allocation controls to the read-only admin panel: a dropdown of the next 8 upcoming Sundays (UTC, never today or past) with each Sunday's allocation status
+- An ICP amount field for the total pool (the amount loaded into the prize canister, fees included)
+- A live preview of first prize, all ten prizes, prizes total, 10 × ledger fee and pool required, with the spec's warnings and rejections
+- A 'Confirm total prize' button followed by a second confirmation warning the first prize becomes public
+- A 'Clear allocation' button available until that Sunday starts
+- After saving, the panel and the player view refresh without a reload
+- The player view never shows the pool; the 'Prize pool' block with 'Pool' appears only in the admin panel
+- Players see 'First prize: X ICP' only for Sundays that have an allocation, and nothing for Sundays without one
+- Claim state shows 'No allocation' when none exists, not 'Claimable'
+- Every admin save and clear checks caller == prizeAdmin() in the backend and rejects anonymous and non-admin callers
+- Report which principal is hardcoded in prizeAdmin() and why the panel appears on the draft URL
+- Report the code review findings and the unnamed fourth unverified item
+- Do not publish
+- JALCA's backend calls the live prize canister hqxm3-eaaaa-aaaam-ajppa-cai with pay(competition, rank, recipient, amount)
+- The prize canister ID is configurable by an admin-only setter, defaulting to the live canister constant
+- A shared actor type declares the prize canister's pay method
+- The competition value sent to pay is the exact archive key timestamp
+- A signed-in Internet Identity player with a claimable prize sees a congratulations modal on load
+- The modal asks for an ICP principal and validates it locally as well-formed, not anonymous, not a canister
+- The modal requires a full read-back and the checkbox 'I confirm this is my ICP wallet. Sent prizes can't be reversed.'
+- The modal explains in plain words what a principal is and that an exchange deposit address or a 64-character account ID will not work
+- Guests and anonymous callers never see the modal
+- The claim is an update call that checks the caller owns that place
+- The place is set to paying synchronously before the first await, together with the ownership check
+- The claim records the recipient and the exact amount, then calls pay with the stored amount, never a browser amount
+- On ok the place becomes paid with the block index; on a definite rejection it returns to claimable; on any unknown outcome it stays paying
+- Only one claim per place can run at once
+- A retry of a paying place sends the same competition, rank, recipient and amount
+- The recipient is locked at the first attempt and cannot be changed while paying
+- The player triggers a retry with a 'Try again' button
+- A stuck paying place is shown to the player and flagged for the admin
+- needs manual check shows the player a clear message and flags the place for the admin, not retry
+- unauthorized is flagged to the admin
+- The deadline is the next competition start, judged by the canister's clock when the place becomes paying
+- A claim accepted before the deadline still pays if it completes after it
+- Retries of paying places after the deadline are still allowed
+- The admin-only Leaderboard window shows unclaimed, paying and paid prizes per competition with amount, recipient principal for paid ones and block index
+- Principals of other players are never returned to the frontend
+- Migration 20261018_000002.mo adds new fields only with an OldActor matching the deployed 20261018_000001.mo NewActor
+- Plan tests with the prize canister mocked: successful claim, rejected claim returning to claimable, unknown outcome staying paying then a retry that pays once, recipient change blocked while paying, guest or non-owner rejected, claim at the deadline boundary, no other player's principal in any response, migration upgrade preserving existing data
+- Nothing pays out until the prize canister is funded
+- Migration first: report the exact migration filename, its new fields, and a field-by-field OldActor match before changing code, stopping if the deployed chain ends anywhere other than 20261018_000001.mo
+- Claim lock: setting paying and the ownership check happen in the same synchronous step before the first await, with a double-click test and a two-simultaneous-claims test where only the first wins
+- Amount and key: the amount sent to pay comes only from the stored prize, never from the browser, and the competition value is the exact archive key timestamp
+- Mock only: all tests use a mocked prize canister, anything that can't run is marked written, not executed, and nothing calls the real prize canister during the build
+- Final report: files changed, the migration details, test status for each added test, and anything unverified
+- A per-square death square skull marker overlay for the 11 enabled removal spells with drawn images (ids 3, 4, 6, 10–14, 15, 16, 17)
+- The spell image overlay duration becomes 4 seconds (currently 2 seconds)
+- The per-square removed-piece markers last 6 seconds
+- The user supplies a death square skull image, cropped tight, black background knocked out to transparency, 512x512 with ~6% inset matching the board's piece glyphs
+- Frontend and backend only; do not touch All time, the competition ranking, the allocation panel, guest login, or existing fields
+- Existing tests may be added to; only renamed strings may change
+- Mark each added test written, not executed, if it cannot run
+- A visitor can watch a game as a spectator without logging in
+- A spectator flag plus cached spectator state, mirroring the existing wallet-address storage pattern
+- Spectator polling cadence of 5000ms via one shared getGamePollMs() helper used by all twelve hooks, with players staying at 1500
+- Suppressed voting, kick and burn controls for spectators
+- A spectator bet username prefix that cannot be typed on the login page or produced by uniqueUsername, and that the escrow's place_bet accepts
+- A header spectator badge with a 'Leave and join as a player' path that clears the spectator flag and cached state and goes through the normal login
+- The guided tour gated off for spectators
+- A test that the player starts clean after joining
+- A test that neither castVote site fires for a spectator and that no heartbeat, login or loginRanked call is made
+- A test that player polling stays at 1500
+- A final report of files changed, per-test status, and anything unverified, without publishing
+- All time, Comp, prizes, the claim flow, guest and Internet Identity login for players, and existing tests unchanged (added to only)
+- An Info button on the Players window header matching the sibling windows' info-button pattern
+- Info content covering random Black/White team assignment
+- Info content covering that clicking a username shows OISY wallet connection and NFT count
+- Info content covering that kicking a teammate requires more than 50% of the entire team agreeing
+- Info content covering the Move_Maker 15s and non-Move_Maker 120s heartbeat
+- Frontend-only presentation change; no backend or migration change
+- Fix the blank white preview screen so the app renders a visible, usable screen at the default route
+- Repair the frontend so it boots with valid backend configuration instead of the literal string 'undefined'
+- Catch load-time failures so they show a recoverable error instead of a white page
+- Fix the finalize step so a competition writes winner, runner-up, win counts and prize to the archive when it ends
+- Report why finalize did not run or write for every competition so far
+- Backfill the 22 Oct entry: winner Ohmyohmy, game 154, and create its prize record
+- Backfill the 4, 11, 15 and 18 Oct entries if the data exists
+- Today's Sunday 25 Oct competition (500,000,000 e8s pool, 0.5 ICP first prize) finalizes automatically when it ends
+- An admin way to trigger finalize manually
+- Explain how prizes get paid and whether payout is automatic or claimed
+- Make sure the 0.5 ICP prize for today can be allocated and paid and the prize pool is funded
+- Run a read-only check and report the archive rows, the 22 Oct backfill, today's finalize state and prize allocation status against live data
+- Move the live-store reset inside the finalizeIfNeeded while loop so it clears only when a competition is archived
+- Add a read-only getCompFinalizeState query returning the finalize marker, current boundary, next boundary, isLive, live-store entry count and nextOrder
+- Bump the wordmark version constant to v375
+- A three-frame 'Something is burning' wizard animation shown while an NFT burn (spell cast) is pending
+- Crop only the unused white space on the left of each frame, keeping natural aspect and the full binary-code trail on frame 3, with the same crop box on all three frames
+- All three frames end at identical final dimensions so the wizard does not shift between frames
+- Resize to about 340x340, authored at 2x internally and displayed at 340x340 for high-DPI/mobile crispness
+- The three frames play in order 1→2→3→1, one second apart, looping indefinitely
+- The loop is driven by the burn-pending state, not a fixed 3-second timer; it stops on the same tick the pending state clears
+- The real spell image wins the render over the burning loop so a same-tick handoff never shows a stale burning frame
+- The burning state is shown to all users, sourced from the shared polled game state set when the backend accepts the burn, not on button click
+- Failure exit: a genuinely failed burn or an ineligible/Legacy rejection stops and clears the sequence
+- A Subao Ve block is not a failure and shows the normal spell image
+- Placement and behavior match the existing spell overlays: over b6-g3, fade in/out, board stays clickable, no sound
+- The 3-frame burning sequence plays as a pre-roll before the spell image/effect
+- If the spell has not arrived after the initial 3 frames, the 3 frames loop until the spell image/effect takes over
+- The burning frames are latched locally so they finish/loop even if the polled prop clears mid-sequence
+- The spell image wins the render on handoff
+- Frontend-only timing change in Chessboard.tsx; no backend, data or migration change
+- A summonPiece(board, team, pieceType) helper returning { board; placedSquare } or null
+- Candidate squares sorted by distance from the centre (d4, e4, d5, e5 first, then outward, fixed tie-break)
+- The first empty square, not on rank 1 or 8 for pawns, where isInCheck(newBoard, enemy) is false, receives the piece
+- The five resurrection spells summon one brand-new friendly piece of their type, whether or not one was ever captured
+- No board effect when no safe square exists
+- The five spell descriptions say 'Summons 1 friendly <type> on the closest safe square to the centre' with the 'requires a captured piece' wording removed
+- No changes to applyMove or the removal helpers
+- Add the three summon-spell images (Anne Boleyn, Cuoclot Sac Wonmuc Rook, Lazarus) cropped/resized to 512×342
+- Wire each as the Oisy wallet NFT grid thumbnail and as the spell image after the 3-frame burning pre-roll
+- Enable all three spells in the backend spell list so they are options when the backend sends NFTs to players
+- Show the three spells as enabled in the 'Spell names, meanings and effects' info modal
+- Thayma and Hipsy Titam stay as they are (no image, not enabled) until the user supplies their images
+- A permanent yellow drop-shadow glow around the piece placed by a summon spell (Thayma, Hipsy Titam, Lazarus, Cuoclot Sac Wonmuc Rook, Anne Boleyn), to differentiate it from other pieces
+- Promoted pieces are NOT summoned pieces and must never glow
+- The glow is permanent for that piece: it moves with the piece, clears when the piece is captured, and clears at game end
+- Frontend applies a yellow drop-shadow, not a square border and not an outline
+- No timers, no local UI state
+- Remove the unconditional mint of an NFT to the fixed principal g2pdm-hmunr-5miqy-43zdt-fxmqu-yrqli-kqsjh-pusdw-gctym-kzi5w-4qe that happens after every game conclusion
+- Do not touch the separate principal bejgi-icebs-xhnvn-bqcpt-tx23r-ubev7-bm6mq-uonbp-mpsg7-rstfj-6ae used for story writer and prize admin
+- Fix the off-by-one so the NFT minted at the end of a game is stamped with the game number just played, not the incremented next game number
+- Story content, voting and the writer composer behavior stay unchanged
+- The Forever section gets its own page
+- Each page after the Forever page contains 3 sections
+- The Forward button produces the next page
+- The page indicator reflects the real page count
+- Story content, Delete/Keep voting and the writer composer stay unchanged
+- The Game Record modal's NFT Mint Results section reads the game number of the game that just ended, not the post-increment counter
+- The 'Spells cast' list accumulates for the duration of the game, clearing on game start/end rather than on move completion
+- The 'Spells cast' list stays split between White and Black, showing which team cast which offensive spell and whether it succeeded or failed against a Subao Ve
+- No data migration needed
+- An admin-only getPrizeCanisterBalances method using the same admin check as the other prize admin endpoints
+- It calls the prize canister's balances() the same way callPay calls pay, with the same stored prize canister principal
+- The prize canister actor type declares balances : () -> async { icpE8s : nat; cycles : nat }
+- A result type, not a trap: { icpE8s; cycles } on success, an error text on failure
+- A 'Check prize canister funds' button in the admin panel inside the Leaderboard window
+- ICP shown as e8s / 100,000,000 with 4 decimals
+- Cycles shown in T (cycles / 1e12) with 2 decimals
+- The time of the last check is shown
+- A failed call shows 'Prize canister did not answer. It may not be upgraded yet' cleanly instead of breaking
+- The fixed warning 'To add prize money send ICP to the canister ID. Never use Add Cycles, it converts ICP irreversibly.'
+- Read-only: never moves funds and changes no state
+- Newkai Dodan targets every enemy queen on the board and has no board effect when there are none
+- Each enemy queen is handled independently: replaced by an enemy knight on the same square, or destroyed when that knight would attack the caster's king
+- Only the knight's 8 L-shaped attack offsets on the caster's king decide between knight and destroyed, not a full check evaluation
+- Destroyed queens' squares go in removedSquares so the frontend shows the skull marker
+- Transformed queens' squares go in a new transformedSquares list so the frontend gives each new knight the pink summoned glow
+- After the spell, isInsufficientMaterial runs on the new board and triggers the insufficient-material draw the same way the normal move path does
+- Newkai Dodan is enabled as an NFT spell players can receive at the end of a game
+- The supplied Newkai Dodan image appears in the Spells Meanings Functions information and in the Oisy NFT wallet spell grid
+- The spell description is 'Turns every enemy queen into a knight. Any knight that would check your king is destroyed instead.'
+- Make validation, the board write, the turn flip, the new moveMakerPrincipal and the clock reset one block with no await between them
+- Move the Exercise/Drinking assignment computations and the celebration/draw triggers to after that block
+- Resolve the Random.natRange mover selection so the next mover is known at the flip
+- Add a move-in-progress guard set before the first await and cleared on every exit path, so a second attemptMove mid-call is rejected
+- Set the guard as the very first thing attemptMove does after its basic checks, before the Random.natRange await
+- Confirm the guard is cleared on every exit path, including early #err returns, and cannot stay stuck after a trap
+- On the frontend, block board input while a move call is pending
+- Report whether burnAndPlay has the same pattern; if so, fix it with the guard set before Nft.burnNft
+- An inactive state set after about 90 seconds without a ping, keeping the player in the roster but out of Move_Maker selection
+- Any ping makes an inactive player active again
+- Delete a player only after about 30 minutes of silence, never during the Celebration/Draw window
+- Move_Maker selection skips inactive players
+- Move_Maker heartbeat stays 15s and everyone else changes from 120s to 60s
+- Immediate ping on tab focus, visibilitychange and 'New game'
+- heartbeat and requestNewGame return an error for an unknown principal
+- A 'You were removed, tap to rejoin' banner in the client
+- Verify handleRequestNewGame does not ignore the requestNewGame error
+- Replace weightedTeam with a fewer-players rule: new player joins the team with fewer teamCount players (inactive players still count), random on a tie
+- Returning players keep their team as now
+- Check that reassignTeams is consistent with the fewer-players rule
+- Add a turnsThisGame counter to Player, reset on a new game
+- Create one shared helper used by both assignMoveMakerForTeam and the attemptMove inline pick
+- The helper filters active teammates, excludes the player who just moved if there is more than one candidate, then picks randomly among those with the lowest counter and increments the chosen player's counter
+- New joiners start at the team's current lowest count, not 0
+- Keep the Random await where it is now
+- Keep the pick and counter update inside the same guarded block as the turn flip so the double-move fix isn't affected
+- If the chosen player is removed during the await, handle it as assignMoveMakerForTeam does today
+- The counter increments only once per real turn; a rejected second attemptMove must not bump a counter
+- A returning player who was inactive starts at the team's lowest count, as new joiners do
+- When a team has only one active player, that player is still picked even though they just moved, so the game never stalls
+- A 3-column button bar above the board panel with Vote, Story and Also on the IC buttons
+- One useState<ViewId | null> in routes/game.tsx that opens, switches and closes views, with Escape closing
+- An absolutely positioned overlay covering only the board squares, fully clickable, z-index 25, with title, persistent close button and vertical scrolling
+- An optional embedded prop on VotingWindow, StoryWindow and AlsoOnIcWindow that skips the collapsible header, chevron and theme dots and renders the body as if open
+- An INFO button in the overlay's top row reaching each embedded window's INFO content
+- Removing the three windows from the Layout stack while Wallet/Spells, Prediction Bet and Leaderboard stay as collapsible windows in their current order
+- Views rendered only while open; Story fetching only while showing; Vote selections still working from the route; spectator props unchanged
+- Keeping existing data-ocid markers and adding viewbar. and viewoverlay. markers
+- No tests written, added, edited or deleted in this stage
+- Add Bet and Leaderboard buttons to the existing button bar in the order Vote, Bet, Story, Leaderboard, Also on the IC, with no gap left for the future Spells button
+- Show the existing PredictionBetWindow and LeaderboardWindow inside the same board-view overlay using the same open-view mechanism as Stage B
+- Extend the ViewId type with the two new views
+- Add an optional `embedded` prop to PredictionBetWindow and LeaderboardWindow that skips the collapsible header, chevron and per-window theme dots and renders the body as if open, keeping INFO content reachable from the overlay's INFO button and leaving today's behaviour unchanged when `embedded` is absent
+- Remove the predictionBet and leaderboard slots from the Layout stack so only Wallet/Spells remains collapsible
+- Keep the Leaderboard's queries enabled only while it is showing, its All time/Comp sessionStorage choice and admin section unchanged, and its prize congratulations modal auto-opening when the body mounts and appearing above the overlay
+- Keep the Bet's wallet connection and half-filled bet unhoisted and discarded on close, while disabling the overlay's close button, Escape and the other view buttons during a bet placement in progress via a small optional callback such as onBusyChange, skipping that lock and reporting it if it would require touching the betting logic
+- Keep spectator props unchanged, call no data hook a second time, do not use the old per-window localStorage open keys on the embedded path, keep every existing data-ocid marker, do not edit the guided tour, and write, add, edit or delete no tests
+- A private spell id -> (magic category, level) lookup in lib/spells.mo with the specified assignments
+- A spell is drawable only when nftEligible = true and it has a level assignment
+- One Random draw per recipient over a large range, deriving Nothing / Subao Ve / Basic / Skilled / Advanced / Mastery / OP from r % 100
+- Level selection by non-empty category count then spell count, with Nothing when a level has no eligible spell
+- Guaranteed bettor mints use the same roll with Nothing removed (o = 50 + (r % 50))
+- A normal recipient who rolls Nothing mints nothing and records #skipped("nothing rolled")
+- The 10-recipient cap is applied before the roll; players with no wallet stay #skipped
+- Stale odds comments in types/spells.mo, types/nft.mo and lib/nft.mo are updated without changing dropChance fields
+- No tests, no Candid change, no stable-type change, no burn-path or NFT-canister change, no new SpellEntry fields
+- A third toggle group in the Vote panel offering 2 minutes (default), 1.5 minutes, or 1 minute per turn
+- The chosen turn duration applies to the next game and the current game's live vote
+- The turn countdown and any UI text stating the turn length reflect the chosen value
+- Move the three game-mode buttons to the top, above the Game status area, and enlarge them to the current six-button size
+- Move the six board-view buttons to sit directly above the chessboard, below the Game status area, and reduce them to the current three-button size
+- Button order, labels, icons, active-state styling, click behavior and overlay behavior unchanged
+- A third 3-way toggle group 'Turn time' in the existing Vote panel (2 minutes default / 1.5 minutes / 1 minute), voted on like the NFT spells and starting position toggles with majority wins, driving the live turn countdown and all turn-length text, applied to the next game
+
+## Verified Commands
+
+- **typecheck**: `pnpm typecheck`
+- **fix**: `pnpm fix`
+- **build**: `mops build --no-check-deploy`
+
+## Learnings
+
+- The Vote panel's three toggle groups in src/frontend/src/components/VotingWindow.tsx are stacked vertically by making both the outer toggle row and the inner group container flex-col; the board-view overlay body (data-ocid="viewoverlay.content", min-h-0 flex-1 overflow-y-auto) is the only vertical scroll region, so no horizontal scroll is needed.
+- The generated app test suite fails at this revision for pre-existing reasons unrelated to the Vote panel layout change: characterization tests mock @/hooks/use-guest-identity without isSpectating/useActiveIdentity/useSpectator, several tests mock @/backend without TurnDuration, and the backend PocketIC lane is skipped for no backend wasm.
+- Local preflight for the Vote panel layout change passed: on the landscape game screen the Vote view showed NFT SPELLS, STARTING POSITION and TURN TIME stacked one above the other in a single column with the turn-time group fully visible and reachable and no horizontal scrollbar, and clicking Standard and 1 minute recorded the selections.
+- The wordmark version tag is the single constant JALCA_VERSION in src/frontend/src/lib/version.ts, composed into JALCA_WORDMARK and rendered by the shared Wordmark component in the login header (src/frontend/src/routes/index.tsx) and the Layout brand buffer (src/frontend/src/components/Layout.tsx); bumping the one constant updates both render sites.
+- The generated app test suite fails at this revision for pre-existing reasons unrelated to the wordmark bump: characterization tests mock @/hooks/use-guest-identity without isSpectating/useActiveIdentity/useSpectator, several tests mock @/backend without TurnDuration, and the backend PocketIC lane is skipped for no backend wasm.
+- Local preflight for the wordmark bump passed: the login screen heading read 'jalca v421' and the in-app header wordmark read 'JALCA V421'.
+- The opening turn is detected by comparing the recorder's move count against the number of moves the opening seeded (recorder.openingMoveCount), not against zero: a Random opening seeds replay moves into the recorder, so moves.size() == 0 was never true and the first Move_Maker could burn a non-Subao Ve spell.
+- RecorderStore in src/backend/types/game-recorder.mo gained var openingMoveCount : Nat, set from recorder.moves.size() in startNewGame's #Random branch (src/backend/mixins/chess-game-api.mo) and cleared by resetRecorder; migration 20261026_000000.mo carries it with an OldActor matching 20261025_000000.mo's NewActor.
+- toSnapshot's base GameStateSnapshot literal in src/backend/lib/chess-game.mo must include openingMoveCount = 0 so callers' `with openingMoveCount = recorder.openingMoveCount` has a complete base; the generated bindings do declare openingMoveCount.
+- The frontend first-turn test lives in src/frontend/src/oisy-burn/use-oisy-burn.ts and now compares the shown move count against the seeded opening-move count exposed by useGameState (src/frontend/src/hooks/use-game-state.ts).
+- The generated app test suite fails at this revision for pre-existing reasons unrelated to the opening-turn fix: characterization tests mock @/hooks/use-guest-identity without isSpectating/useActiveIdentity/useSpectator, several tests mock @/backend without TurnDuration, and the backend PocketIC lane reports 60 of 415 failing.
+- Player is stored directly in stable memory via a stable PlayerStore actor field (main.mo: `let players : Types.PlayerStore;`); every upgrade rebuilds PlayerStore.items through a migration function (migratePlayerStore) that walks old Player records into new ones field-by-field, so any new Player field needs exactly this kind of migration.
+- The sole general Player constructor is newPlayer() in lib/chess-game.mo; it already sets isBot = false, the one bot-creation call site overrides it to true immediately after construction, loginInternal's re-login branch only mutates existing fields and constructs no Player, and reassignTeams only mutates team/turnsThisGame on existing records and constructs no Player.
+- Migration 20261119_000000.mo adds isBot : Bool to Player, defaulting every existing human record to false; OldActor matches 20261026_000000.mo's NewActor.
+- getApiDoc (mixins/api-doc.mo) and the OQL Expose player entity (main.mo) already document and project the isBot field.
+- The documented 74 frontend / 7 backend test baseline is stale; the actual suite is 2350+ frontend tests and 428 backend PocketIC tests, with recurring pre-existing failures unrelated to feature changes: characterization tests mock @/hooks/use-guest-identity without isSpectating/useActiveIdentity/useSpectator, several tests mock @/backend without TurnDuration, and the backend PocketIC lane reports dozens of pre-existing failures (76 of 428 at this revision).
+- castKickVote (src/backend/mixins/kick-api.mo) now rejects any vote whose target is the bot, with a clear error, checked after target lookup and before any kick-state mutation.
+- uniqueUsername (src/backend/mixins/chess-game-api.mo) now reserves "Jalca" case-insensitively (via toLower) as a forced collision, independent of whether the bot is currently in the roster, in addition to the existing botRosterKey() collision check.
+- ensureBot() never calls uniqueUsername on either its creation or refresh branch; both branches now explicitly set the bot's displayed username to the literal "Jalca" while its internal roster key / lookup key stays the literal "jalca-bot". An already-deployed bot record self-heals to "Jalca" on its next refresh with no migration needed.
+- recordWins (chess-game-api.mo) now has an explicit isBot guard in addition to its prior incidental rosterBindings-based exclusion.
+- mintGameNftsSafe (chess-game-api.mo) and mintGameNfts (nft-api.mo) now explicitly filter out the bot before delegating to lib/nft.mo; nft-api.mo's filter uses the fixed roster-key literal "jalca-bot" on PlayerListEntry.principal since that mixin has no PlayerStore param.
+- Local preflight for the bot-protection change passed for login/username-reservation and bot-kick-protection flows (screenshots confirmed 'Jalca_copy' human naming, bot shown as 'Jalca', and a no-op kick vote against the bot), but could not drive a full game to conclusion within the test budget, so the recordWins/NFT-mint exclusion for the bot was not directly observed at a real terminal game state (verified only by source review).
+- The generated-app test suite's frontend lane and backend PocketIC lane both carry long-standing pre-existing failures unrelated to feature changes (use-guest-identity mock missing isSpectating/useActiveIdentity/useSpectator, @/backend mock missing TurnDuration, and dozens of failing backend PocketIC tests), confirmed again before and after this change with the same failure signature.
+- Local preflight for the v425 wordmark bump passed: the login screen heading read 'jalca v425' and the in-app header wordmark read 'JALCA V425'.
+- The generated app test suite fails at this revision for pre-existing reasons unrelated to the wordmark bump: characterization tests mock @/hooks/use-guest-identity without isSpectating/useActiveIdentity/useSpectator, several tests mock @/backend without TurnDuration, and the backend PocketIC lane reports 79 failing.

@@ -1,0 +1,19 @@
+{
+  "overview": "A multiplayer online chess game for teams, with NFT spells, betting, story voting and Sunday prize competitions.",
+  "features": [
+    "Play team chess online with other logged-in players",
+    "Vote on NFT spells, starting position and turn time before each game",
+    "Cast NFT spells that transform, summon and destroy pieces",
+    "Bet on games and follow the leaderboard",
+    "Follow the Sunday prize competition and claim prizes"
+  ],
+  "category": "game",
+  "tags": [
+    "chess",
+    "multiplayer",
+    "game",
+    "nft",
+    "competition"
+  ],
+  "last_updated": "2026-11-14T00:13:40.817Z"
+}
