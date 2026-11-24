@@ -340,46 +340,45 @@ actor {
   // runs again AND postupgrade runs, so without this guard two clocks would run.
   transient var clockArmed : Bool = false;
 
+  transient var lastFinalizeCheck : Int = 0;
+
+  // The clock re-arms ITSELF first (one-shot timer), so an error later in the
+  // tick can never stop it. 5 s normally; 20 s when the lobby is Paused with
+  // no human in it.
+  func clockTick() : async () {
+    var anyHuman = false;
+    for (pl in players.items.values()) { if (not pl.isBot) { anyHuman := true } };
+    let idle = (not anyHuman) and gameState.gamePhase == #Paused;
+    ignore Timer.setTimer<system>(
+      #seconds(if (idle) 20 else ChessGame.maintenanceIntervalSeconds),
+      clockTick,
+    );
+    try {
+      if (not idle) { await runMaintenance(Time.now()) };
+    } catch e {
+      Debug.print("[tick] error: " # Error.message(e));
+    };
+    try {
+      let nowT = Time.now();
+      if (nowT - lastFinalizeCheck >= 60_000_000_000) {
+        lastFinalizeCheck := nowT;
+        ignore SundayComp.finalizeNow(
+          compWinStore,
+          compArchiveStore,
+          compFinalizeMarker,
+          compArchive10Store,
+          compFinalize10Marker,
+          prizeAllocationStore,
+          prizeClaimStore,
+          nowT,
+        );
+      };
+    } catch _ {};
+  };
+
   if (not clockArmed) {
     clockArmed := true;
-    ignore Timer.recurringTimer<system>(
-      #seconds(ChessGame.maintenanceIntervalSeconds),
-      func() : async () {
-        var anyHuman = false;
-        for (pl in players.items.values()) { if (not pl.isBot) { anyHuman := true } };
-        try {
-          if (anyHuman or gameState.gamePhase != #Paused) { await runMaintenance(Time.now()) };
-        } catch e {
-          Debug.print("[tick] error: " # Error.message(e));
-          // Swallow: a transient trap affects only this tick; the next tick retries.
-        };
-        // Archive any competition whose day has fully passed, so a competition
-        // finalizes automatically when it ends even with no reader. Idempotent
-        // and exactly-once via the two finalize markers; a no-op when nothing is
-        // due. Wrapped in its own try/catch so a finalize failure never blocks
-        // the maintenance pass (and vice versa).
-        finalizeTick += 1;
-        try {
-          if (finalizeTick % 12 == 1) {
-            let cost = IC.countInstructions(func() {
-              ignore SundayComp.finalizeNow(
-            compWinStore,
-            compArchiveStore,
-            compFinalizeMarker,
-            compArchive10Store,
-            compFinalize10Marker,
-            prizeAllocationStore,
-            prizeClaimStore,
-            Time.now(),
-              );
-            });
-            Debug.print("[cost] competition check used " # Nat64.toText(cost) # " instructions");
-          };
-        } catch _ {
-          // Swallow: a transient trap affects only this tick; the next tick retries.
-        };
-      },
-    );
+    ignore Timer.setTimer<system>(#seconds(ChessGame.maintenanceIntervalSeconds), clockTick);
   };
 
   // Re-arm the recurring maintenance timer after an upgrade. The timer handle
@@ -391,39 +390,7 @@ actor {
   system func postupgrade() {
     if (not clockArmed) {
       clockArmed := true;
-      ignore Timer.recurringTimer<system>(
-        #seconds(ChessGame.maintenanceIntervalSeconds),
-        func() : async () {
-          var anyHuman = false;
-          for (pl in players.items.values()) { if (not pl.isBot) { anyHuman := true } };
-          try {
-            if (anyHuman or gameState.gamePhase != #Paused) { await runMaintenance(Time.now()) };
-          } catch e {
-            Debug.print("[tick] error: " # Error.message(e));
-            // Swallow: a transient trap affects only this tick; the next tick retries.
-          };
-          finalizeTick += 1;
-          try {
-            if (finalizeTick % 12 == 1) {
-              let cost = IC.countInstructions(func() {
-                ignore SundayComp.finalizeNow(
-              compWinStore,
-              compArchiveStore,
-              compFinalizeMarker,
-              compArchive10Store,
-              compFinalize10Marker,
-              prizeAllocationStore,
-              prizeClaimStore,
-              Time.now(),
-                );
-              });
-              Debug.print("[cost] competition check used " # Nat64.toText(cost) # " instructions");
-            };
-          } catch _ {
-            // Swallow: a transient trap affects only this tick; the next tick retries.
-          };
-        },
-      );
+      ignore Timer.setTimer<system>(#seconds(ChessGame.maintenanceIntervalSeconds), clockTick);
     };
   };
 
