@@ -7,6 +7,8 @@ import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Timer "mo:core/Timer";
 import Debug "mo:core/Debug";
+import Nat64 "mo:core/Nat64";
+import IC "mo:core/InternetComputer";
 import Error "mo:core/Error";
 import AccessControl "mo:caffeineai-authorization/access-control";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
@@ -333,44 +335,13 @@ actor {
   // actor initializer and in postupgrade, but not in a mixin body or in a
   // function called from either. The callback runs the mixin's public
   // runMaintenance.
-  ignore Timer.recurringTimer<system>(
-    #seconds(ChessGame.maintenanceIntervalSeconds),
-    func() : async () {
-      try {
-        await runMaintenance(Time.now());
-      } catch e {
-        Debug.print("[tick] error: " # Error.message(e));
-        // Swallow: a transient trap affects only this tick; the next tick retries.
-      };
-      // Archive any competition whose day has fully passed, so a competition
-      // finalizes automatically when it ends even with no reader. Idempotent
-      // and exactly-once via the two finalize markers; a no-op when nothing is
-      // due. Wrapped in its own try/catch so a finalize failure never blocks
-      // the maintenance pass (and vice versa).
-      try {
-        ignore SundayComp.finalizeNow(
-          compWinStore,
-          compArchiveStore,
-          compFinalizeMarker,
-          compArchive10Store,
-          compFinalize10Marker,
-          prizeAllocationStore,
-          prizeClaimStore,
-          Time.now(),
-        );
-      } catch _ {
-        // Swallow: a transient trap affects only this tick; the next tick retries.
-      };
-    },
-  );
+  transient var finalizeTick : Nat = 0;
+  // The clock must be started exactly ONCE per start-up. On upgrade this body
+  // runs again AND postupgrade runs, so without this guard two clocks would run.
+  transient var clockArmed : Bool = false;
 
-  // Re-arm the recurring maintenance timer after an upgrade. The timer handle
-  // is runtime-only and is NOT preserved across upgrades, so without this hook
-  // the maintenance pass (stale-player cleanup, turn-timeout expiry,
-  // celebration expiry) and the automatic competition finalize would silently
-  // stop firing after the first upgrade. Same cadence and same callback as the
-  // install path above, so exactly one timer is armed per (re)start.
-  system func postupgrade() {
+  if (not clockArmed) {
+    clockArmed := true;
     ignore Timer.recurringTimer<system>(
       #seconds(ChessGame.maintenanceIntervalSeconds),
       func() : async () {
@@ -380,8 +351,16 @@ actor {
           Debug.print("[tick] error: " # Error.message(e));
           // Swallow: a transient trap affects only this tick; the next tick retries.
         };
+        // Archive any competition whose day has fully passed, so a competition
+        // finalizes automatically when it ends even with no reader. Idempotent
+        // and exactly-once via the two finalize markers; a no-op when nothing is
+        // due. Wrapped in its own try/catch so a finalize failure never blocks
+        // the maintenance pass (and vice versa).
+        finalizeTick += 1;
         try {
-          ignore SundayComp.finalizeNow(
+          if (finalizeTick % 12 == 1) {
+            let cost = IC.countInstructions(func() {
+              ignore SundayComp.finalizeNow(
             compWinStore,
             compArchiveStore,
             compFinalizeMarker,
@@ -390,12 +369,58 @@ actor {
             prizeAllocationStore,
             prizeClaimStore,
             Time.now(),
-          );
+              );
+            });
+            Debug.print("[cost] competition check used " # Nat64.toText(cost) # " instructions");
+          };
         } catch _ {
           // Swallow: a transient trap affects only this tick; the next tick retries.
         };
       },
     );
+  };
+
+  // Re-arm the recurring maintenance timer after an upgrade. The timer handle
+  // is runtime-only and is NOT preserved across upgrades, so without this hook
+  // the maintenance pass (stale-player cleanup, turn-timeout expiry,
+  // celebration expiry) and the automatic competition finalize would silently
+  // stop firing after the first upgrade. Same cadence and same callback as the
+  // install path above, so exactly one timer is armed per (re)start.
+  system func postupgrade() {
+    if (not clockArmed) {
+      clockArmed := true;
+      ignore Timer.recurringTimer<system>(
+        #seconds(ChessGame.maintenanceIntervalSeconds),
+        func() : async () {
+          try {
+            await runMaintenance(Time.now());
+          } catch e {
+            Debug.print("[tick] error: " # Error.message(e));
+            // Swallow: a transient trap affects only this tick; the next tick retries.
+          };
+          finalizeTick += 1;
+          try {
+            if (finalizeTick % 12 == 1) {
+              let cost = IC.countInstructions(func() {
+                ignore SundayComp.finalizeNow(
+              compWinStore,
+              compArchiveStore,
+              compFinalizeMarker,
+              compArchive10Store,
+              compFinalize10Marker,
+              prizeAllocationStore,
+              prizeClaimStore,
+              Time.now(),
+                );
+              });
+              Debug.print("[cost] competition check used " # Nat64.toText(cost) # " instructions");
+            };
+          } catch _ {
+            // Swallow: a transient trap affects only this tick; the next tick retries.
+          };
+        },
+      );
+    };
   };
 
   // Game recorder public API — exposes getGameRecord for the frontend modal.

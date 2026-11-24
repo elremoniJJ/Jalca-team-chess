@@ -1115,7 +1115,7 @@ mixin (
     // readiness via the "New game" button / re-login). The modal does not
     // auto-dismiss; players linger on it until they explicitly choose New game
     // or Log out.
-    Debug.print("[start] celebration over: gateOk=" # debug_show (gateOk()) # " alreadyStarting=" # debug_show newGameStarting);
+    if (gateOk() or newGameStarting) Debug.print("[start] celebration over: gateOk=" # debug_show (gateOk()) # " alreadyStarting=" # debug_show newGameStarting);
     if (gateOk()) {
       // Fix B: re-entry guard — if a startNewGame is already mid-flight
       // (another message reached this branch first and is awaiting inside
@@ -1158,7 +1158,9 @@ mixin (
   transient var tickStage : Text = "none yet";
 
   public func runMaintenance(now : Types.Timestamp) : async () {
-    Debug.print("[tick] previous tick got as far as: " # tickStage);
+    if (tickStage != "bot step done" and tickStage != "no players") {
+      Debug.print("[tick] previous tick got as far as: " # tickStage);
+    };
     tickStage := "started";
     if (players.items.size() == 0) { tickStage := "no players"; return };
     await cleanupStalePlayers(now);

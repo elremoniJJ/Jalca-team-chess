@@ -1,0 +1,1046 @@
+type WinnerRankingRow = 
+ record {
+   displayName: text;
+   isMe: bool;
+   rank: nat;
+   wins: nat;
+ };
+type WinCreditPreviewPlayer = 
+ record {
+   isBound: bool;
+   pingFresh: bool;
+   secondsSinceLastPing: nat;
+   team: Team;
+   username: text;
+ };
+type WalletSource = 
+ variant {
+   none;
+   oisy;
+   typed;
+ };
+type VoteTally = 
+ record {
+   ninetySecondCount: nat;
+   oneMinuteCount: nat;
+   randomCount: nat;
+   spellOffCount: nat;
+   spellOnCount: nat;
+   standardCount: nat;
+   twoMinuteCount: nat;
+   winning: NextGameSettings;
+ };
+type Vote = 
+ record {
+   spellUse: SpellUse;
+   startingPosition: StartingPosition;
+   turnDuration: TurnDuration;
+ };
+type Value = 
+ variant {
+   "bool": bool;
+   float: float64;
+   "int": int;
+   "nat": nat;
+   "null";
+   "text": text;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type TurnDuration = 
+ variant {
+   NinetySeconds;
+   OneMinute;
+   TwoMinutes;
+ };
+type TriggerType = 
+ variant {
+   Capture;
+   Castling;
+   Check;
+   EnPassant;
+ };
+type Timestamp = int;
+type TeamWindow = 
+ record {
+   minorMajorSpells: vec BurnedSpell;
+   subaoVeSpells: vec BurnedSpell;
+ };
+type TeamRoster = 
+ record {
+   count: nat;
+   members: vec PlayerListEntry;
+   team: Team;
+ };
+type Team = 
+ variant {
+   Black;
+   White;
+ };
+type SundayAllocationStatus = 
+ record {
+   allocated: bool;
+   poolE8s: opt nat;
+   sunday: Timestamp;
+ };
+type StoryRow = 
+ record {
+   deleteCount: nat;
+   deleted: bool;
+   hasVotedDelete: bool;
+   hasVotedKeep: bool;
+   index: nat;
+   keepCount: nat;
+   "text": text;
+ };
+type StartingPosition = 
+ variant {
+   Random;
+   Standard;
+ };
+type StartGameResult = 
+ variant {
+   err: EscrowError;
+   ok;
+ };
+type StartGameArgs = 
+ record {
+   game_id: text;
+   start_time: nat;
+ };
+type SpenderPrincipal = text;
+type SpellUse = 
+ variant {
+   Off;
+   On;
+ };
+type SpellTable = 
+ record {
+   balls: vec SpellEntry;
+   block: opt SpellEntry;
+   major: vec SpellEntry;
+   minor: vec SpellEntry;
+ };
+type SpellResolutionOutcome = 
+ variant {
+   cancelled;
+   fired;
+   legacy;
+ };
+type SpellResolution = 
+ record {
+   attacker: Team;
+   defender: Team;
+   firesOnBoard: bool;
+   outcome: SpellResolutionOutcome;
+   shieldAfter: nat;
+   shieldBefore: nat;
+   spellValue: nat;
+ };
+type SpellLevel = 
+ variant {
+   Advanced;
+   Basic;
+   Mastery;
+   OP;
+   Skilled;
+ };
+type SpellKind = 
+ variant {
+   Balls;
+   Major;
+   Minor;
+   SubaoVe;
+ };
+type SpellEntry = 
+ record {
+   category: SpellCategory;
+   complexity: SpellComplexity;
+   dropChance: nat;
+   id: nat;
+   level: opt SpellLevel;
+   magicCategory: opt MagicCategory;
+   meaning: text;
+   name: text;
+   nftEligible: bool;
+   spell: text;
+ };
+type SpellComplexity = 
+ variant {
+   Complex;
+   Easy;
+   Moderate;
+ };
+type SpellCategory = 
+ variant {
+   Balls;
+   Block;
+   Major;
+   Minor;
+ };
+type SpellCastOutcome = 
+ variant {
+   noEffect;
+   prevented;
+   succeeded;
+ };
+type SpellBoardView = 
+ record {
+   blackBallsColour: opt BallsColourFamily;
+   blackOpponentImage: opt OpponentBoardImage;
+   blockedSquareOwners: vec BlockedSquare;
+   blockedSquares: vec nat;
+   explosiveSquares: vec ExplosiveSquare;
+   spellUseEnabled: bool;
+   whiteBallsColour: opt BallsColourFamily;
+   whiteOpponentImage: opt OpponentBoardImage;
+ };
+type SpellBoardState = 
+ record {
+   blackBallsColour: opt BallsColourFamily;
+   blackOpponentImage: opt OpponentBoardImage;
+   blockedSquareOwners: vec BlockedSquare;
+   blockedSquares: vec nat;
+   explosiveSquares: vec ExplosiveSquare;
+   whiteBallsColour: opt BallsColourFamily;
+   whiteOpponentImage: opt OpponentBoardImage;
+ };
+type ShieldState = 
+ record {
+   blackShield: nat;
+   whiteShield: nat;
+ };
+type ShieldResolutionSnapshot = 
+ record {
+   blackShield: nat;
+   lastBurnAndPlay: opt BurnAndPlayResult;
+   whiteShield: nat;
+ };
+type SettlementResult = 
+ record {
+   game_id: text;
+   outcome: GameOutcome;
+   settled_at: nat;
+ };
+type SettlementRecord = 
+ record {
+   id: nat;
+   settlement: SettlementResult;
+   timestamp: Timestamp;
+ };
+type Result__1 = 
+ variant {
+   err: Error;
+   ok;
+ };
+type ResultRecord = 
+ record {
+   id: nat;
+   result: GameResult;
+   timestamp: Timestamp;
+ };
+type Result = 
+ record {
+   hasMore: bool;
+   rows: vec vec Cell;
+ };
+type ReportOutcomeResult = 
+ variant {
+   err: EscrowError;
+   ok;
+ };
+type ReportOutcomeArgs = 
+ record {
+   end_time: nat;
+   game_id: text;
+   result: GameOutcome;
+ };
+type RecordedMove = 
+ record {
+   capturedPiece: opt PieceType;
+   fromSquare: nat;
+   gaveCheck: bool;
+   index: nat;
+   isCastling: bool;
+   isEnPassant: bool;
+   notation: text;
+   promotion: opt PieceType;
+   team: Team;
+   timestamp: Timestamp;
+   toSquare: nat;
+   username: text;
+ };
+type RecipientRole = 
+ variant {
+   Drawer;
+   Winner;
+ };
+type RealBetRecord = 
+ record {
+   bet: RealBet;
+   id: nat;
+   timestamp: Timestamp;
+ };
+type RealBet = 
+ record {
+   amount_e8s: nat;
+   anonymous: bool;
+   block_index: nat;
+   game_id: text;
+   outcome: GameOutcome;
+   placed_at: nat;
+   player: principal;
+   pot_tier: nat;
+   username: text;
+   wallet_address: text;
+ };
+type PseudoPrincipal = text;
+type PrizeWarning = variant {lowRanksBelowFee;};
+type PrizeRejection = 
+ variant {
+   aboveMaximumPool;
+   poolTooSmallForFees;
+   rank10RoundsToZero;
+ };
+type PrizePreviewResult = 
+ record {
+   preview: PrizePreview;
+   rejections: vec PrizeRejection;
+   warnings: vec PrizeWarning;
+ };
+type PrizePreview = 
+ record {
+   feesTotalE8s: nat;
+   firstPrizeE8s: nat;
+   poolRequiredE8s: nat;
+   prizesTotalE8s: nat;
+   rankPrizesE8s: vec nat;
+ };
+type PrizePool = 
+ record {
+   firstPrizeE8s: nat;
+   poolE8s: nat;
+ };
+type PrizeCanisterBalances = 
+ record {
+   cycles: nat;
+   icpE8s: nat;
+ };
+type PrizeBalancesResult = 
+ variant {
+   err: text;
+   ok: PrizeCanisterBalances;
+ };
+type Prediction = 
+ variant {
+   Black;
+   Draw;
+   White;
+ };
+type Pot = 
+ variant {
+   Hundred;
+   One;
+   Ten;
+   Thousand;
+ };
+type PlayerListEntry = 
+ record {
+   listPosition: nat;
+   "principal": PseudoPrincipal;
+   team: Team;
+   username: text;
+   walletAddress: opt text;
+ };
+type PlayerKickState = 
+ record {
+   kickCount: nat;
+   kickedBy: vec text;
+   "principal": PseudoPrincipal;
+ };
+type PlayerInfo = 
+ record {
+   isBot: bool;
+   isFresh: bool;
+   isInactive: bool;
+   isMoveMaker: bool;
+   "principal": PseudoPrincipal;
+   team: Team;
+   username: text;
+   walletAddress: opt text;
+   walletSource: WalletSource;
+ };
+type PlaceBetResult = 
+ variant {
+   err: EscrowError;
+   ok: nat;
+ };
+type PlaceBetArgs = 
+ record {
+   amount_e8s: nat;
+   anonymous: bool;
+   outcome: GameOutcome;
+   player: principal;
+   pot_tier: nat;
+   username: text;
+   wallet_address: text;
+ };
+type PieceType = 
+ variant {
+   Bishop;
+   King;
+   Knight;
+   Pawn;
+   Queen;
+   Rook;
+ };
+type Piece = 
+ record {
+   color: Team;
+   pieceType: PieceType;
+   summoned: bool;
+ };
+type PbppInformationEntry = 
+ record {
+   content: text;
+   timestamp: Timestamp;
+ };
+type PastWinnerRow = 
+ record {
+   runnerUpName: opt text;
+   runnerUpWins: opt nat;
+   sunday: Timestamp;
+   winnerName: opt text;
+   winnerWins: opt nat;
+ };
+type OpponentBoardImage = 
+ variant {
+   Hairy;
+   Shiny;
+   Veiny;
+ };
+type NextGameSettings = 
+ record {
+   spellUse: SpellUse;
+   startingPosition: StartingPosition;
+   turnDuration: TurnDuration;
+ };
+type MyWins = 
+ record {
+   rank: nat;
+   wins: nat;
+ };
+type MyPrize = 
+ record {
+   amountE8s: nat;
+   deadline: Timestamp;
+   rank: nat;
+   sunday: Timestamp;
+ };
+type MoveResult = 
+ variant {
+   err: text;
+   ok: GameStateSnapshot;
+ };
+type MintStatusEntry = 
+ record {
+   outcome: opt MintOutcome;
+   team: Team;
+   username: text;
+   walletAddress: opt text;
+ };
+type MintOutcome = 
+ variant {
+   failed: text;
+   skipped: text;
+   succeeded: record {tokenId: nat;};
+ };
+type MintMetadata = 
+ record {
+   concludedAt: Timestamp;
+   endState: EndState;
+   finalBoardState: FinalBoardState;
+   gameNumber: nat;
+   gameResult: GameResult__1;
+   moveCount: nat;
+   recipientRole: RecipientRole;
+   recipientTeam: Team;
+   recipientUsername: text;
+   recipientWalletAddress: text;
+   spellId: nat;
+   spellName: text;
+ };
+type MintAttemptGroup = 
+ record {
+   attempts: vec MintAttempt;
+   gameNumber: nat;
+ };
+type MintAttempt = 
+ record {
+   attemptedAt: Timestamp;
+   gameNumber: nat;
+   id: nat;
+   outcome: MintOutcome;
+   recipientRole: RecipientRole;
+   recipientTeam: Team;
+   recipientUsername: text;
+   recipientWalletAddress: text;
+ };
+type MagicCategory = 
+ variant {
+   Conjuring;
+   Elemental;
+   Hex;
+   Necromancy;
+ };
+type LoginResult = 
+ record {
+   gameState: GameStateSnapshot;
+   "principal": PseudoPrincipal;
+   team: Team;
+   username: text;
+ };
+type LegacyReason = 
+ variant {
+   keysAbsent;
+   keysDisagree;
+   readFailed;
+   wrongType;
+ };
+type KickState = record {players: vec PlayerKickState;};
+type KickResult = 
+ variant {
+   err: text;
+   ok;
+ };
+type GameStateSnapshot = 
+ record {
+   board: vec opt Piece;
+   celebrationSecondsLeft: opt nat;
+   moveMaker: opt PseudoPrincipal;
+   openingMoveCount: nat;
+   openingName: opt text;
+   phase: GamePhase;
+   players: vec PlayerInfo;
+   spellBoardState: SpellBoardState;
+   spellUseEnabled: bool;
+   spellWinName: opt text;
+   timerRemainingMs: nat;
+   turn: Team;
+   turnDuration: TurnDuration;
+   winner: opt Team;
+ };
+type GameSettingsSnapshot = 
+ record {
+   ninetySecondCount: nat;
+   oneMinuteCount: nat;
+   randomCount: nat;
+   spellOffCount: nat;
+   spellOnCount: nat;
+   spellUse: SpellUse;
+   standardCount: nat;
+   startingPosition: StartingPosition;
+   turnDuration: TurnDuration;
+   twoMinuteCount: nat;
+ };
+type GameResult__1 = 
+ variant {
+   BlackWin;
+   Draw;
+   WhiteWin;
+ };
+type GameResult = 
+ variant {
+   Black;
+   Draw;
+   White;
+ };
+type GameRecord = 
+ record {
+   active: bool;
+   concluded: bool;
+   endState: opt EndState;
+   finalBoard: FinalBoardState;
+   finalMovePlayerOnTimeout: opt text;
+   moves: vec RecordedMove;
+   openingName: text;
+   playerList: vec PlayerListEntry;
+   result: opt GameResult__1;
+   rosters: vec TeamRoster;
+   spellWinName: opt text;
+   stalePlayerList: vec PlayerListEntry;
+ };
+type GamePhase = 
+ variant {
+   Celebration;
+   Draw;
+   Paused;
+   Playing;
+ };
+type GameOutcome = 
+ variant {
+   black;
+   draw;
+   white;
+ };
+type FinalizeReport = 
+ record {
+   archived: vec Timestamp;
+   lastFinalizedSunday: Timestamp;
+ };
+type FinalBoardState = vec opt text;
+type ExplosiveSquare = 
+ record {
+   owner: Team;
+   square: nat;
+ };
+type ExerciseKind = 
+ variant {
+   Cartwheel;
+   Crunches;
+   NinjaRoll;
+   PushUps;
+   Squats;
+ };
+type ExerciseAssignment = 
+ record {
+   capturedPiece: PieceType;
+   exercise: ExerciseKind;
+   index: nat;
+   lostTeam: Team;
+   moveIndex: nat;
+   reps: nat;
+   timestamp: Timestamp;
+   trigger: opt TriggerType;
+ };
+type EscrowError = 
+ variant {
+   InsufficientAllowance;
+   InvalidTier;
+   NoActiveGame;
+   NoApproval;
+   TransferFailed: text;
+   Unauthorized;
+ };
+type Error = 
+ variant {
+   AmbiguousAttribute: record {
+                         field: text;
+                         sources: vec text;
+                       };
+   FrontendOriginMismatch: record {
+                             expected: vec text;
+                             got: text;
+                           };
+   FrontendOriginsNotConfigured;
+   MalformedCandid;
+   MissingField: text;
+   MixedSsoSources: record {
+                      otherKeys: vec text;
+                      ssoKeys: vec text;
+                    };
+   NoAttributes;
+   Stale: record {ageNs: nat;};
+   UnknownNonce;
+   UntrustedSsoSource: record {domain: text;};
+ };
+type EndState = 
+ variant {
+   Checkmate;
+   Draw;
+   InsufficientMaterial;
+   Stalemate;
+   Timeout;
+ };
+type DrinkingAssignment = 
+ record {
+   capturedPiece: PieceType;
+   drinks: nat;
+   index: nat;
+   lostTeam: Team;
+   moveIndex: nat;
+   timestamp: Timestamp;
+   trigger: opt TriggerType;
+ };
+type CompStatus = 
+ record {
+   live: bool;
+   secondsRemaining: nat;
+   sunday: Timestamp;
+ };
+type CompStandingRow = 
+ record {
+   displayName: text;
+   isMe: bool;
+   rank: nat;
+   wins: nat;
+ };
+type CompFinalizeState = 
+ record {
+   currentStart: Timestamp;
+   isLive: bool;
+   lastFinalizedSunday: Timestamp;
+   liveEntryCount: nat;
+   nextOrder: nat;
+   nextStart: Timestamp;
+ };
+type CollectionPrincipal = text;
+type ClaimStatus = 
+ variant {
+   claimable;
+   expired;
+ };
+type ClaimState = 
+ variant {
+   claimable;
+   paid;
+   paying;
+ };
+type ClaimResult = 
+ record {
+   amountE8s: nat;
+   blockIndex: opt nat;
+   message: opt text;
+   state: ClaimState;
+ };
+type Cell = 
+ record {
+   name: text;
+   value: Value;
+ };
+type BurnedSpellCategory = 
+ variant {
+   Balls;
+   Major;
+   Minor;
+   SubaoVe;
+ };
+type BurnedSpell = 
+ record {
+   category: BurnedSpellCategory;
+   gameNumber: nat;
+   outcome: SpellCastOutcome;
+   spellName: text;
+   team: Team;
+ };
+type BurnStateSnapshot = 
+ record {
+   blackWindow: TeamWindow;
+   burnOccurredThisTurn: bool;
+   burnedByTeam: opt Team;
+   whiteWindow: TeamWindow;
+ };
+type BurnResult = 
+ variant {
+   err: text;
+   ok: BurnStateSnapshot;
+ };
+type BurnRequest = 
+ record {
+   category: BurnedSpellCategory;
+   gameNumber: nat;
+   spellName: text;
+ };
+type BurnOutcome = 
+ variant {
+   burnedLegacy: LegacyReason;
+   burnedWithSpell: record {
+                      gameNumber: nat;
+                      spellName: text;
+                    };
+   failed: text;
+ };
+type BurnAndPlayResult2 = 
+ variant {
+   err: text;
+   ok: record {
+         burn: BurnAndPlayResult;
+         shieldState: ShieldState;
+       };
+ };
+type BurnAndPlayResult = 
+ record {
+   appliedColour: opt BallsColourFamily;
+   appliedOpponentImage: opt OpponentBoardImage;
+   castOutcome: opt SpellCastOutcome;
+   gameNumber: opt nat;
+   insufficientMaterial: bool;
+   kind: SpellKind;
+   legacyReason: opt LegacyReason;
+   removedSquares: vec nat;
+   resolution: opt SpellResolution;
+   spellCheckWin: opt Team;
+   spellName: text;
+   team: Team;
+   tokenId: nat;
+   transformedSquares: vec nat;
+ };
+type BurnAndPlayRequest = 
+ record {
+   gameNumber: opt nat;
+   kind: SpellKind;
+   spellName: text;
+   tokenId: nat;
+ };
+type BlockedSquare = 
+ record {
+   owner: Team;
+   square: nat;
+ };
+type BetSubmission = 
+ record {
+   anonymous: bool;
+   displayUsername: text;
+   playerPrincipal: PseudoPrincipal;
+   pot: Pot;
+   prediction: Prediction;
+ };
+type BetRecord = 
+ record {
+   bet: BetSubmission;
+   id: nat;
+   timestamp: Timestamp;
+ };
+type BallsColourFamily = 
+ variant {
+   Cloudy;
+   Fiery;
+   Grassy;
+   Sandy;
+   Wooden;
+ };
+type BackfillEntry = 
+ record {
+   runnerUpName: opt text;
+   runnerUpWins: opt nat;
+   sunday: Timestamp;
+   winnerName: text;
+   winnerWins: nat;
+ };
+type ArchivedPrizePool = 
+ record {
+   firstPrizeE8s: nat;
+   poolE8s: nat;
+   sunday: Timestamp;
+ };
+type ApprovalStateResult = 
+ variant {
+   err: text;
+   ok: ApprovalState;
+ };
+type ApprovalState = 
+ record {
+   collection: CollectionPrincipal;
+   granted: bool;
+   grantedAt: Timestamp;
+   lastConsentError: opt text;
+   player: PseudoPrincipal;
+   spender: SpenderPrincipal;
+ };
+type ApprovalResult = 
+ variant {
+   consentError: text;
+   err: text;
+   ok: ApprovalState;
+ };
+type Allowance = 
+ record {
+   allowance: nat;
+   expires_at: opt nat64;
+ };
+type AllocationResult = 
+ variant {
+   ok: SundayAllocationStatus;
+   rejected: vec PrizeRejection;
+ };
+type AdminPrizeRow = 
+ record {
+   competition: Timestamp;
+   paid: vec AdminPrizeEntry;
+   paying: vec AdminPrizeEntry;
+   unclaimed: vec AdminPrizeEntry;
+ };
+type AdminPrizeOverview__1 = record {rows: vec AdminPrizeRow;};
+type AdminPrizeOverview = 
+ record {
+   archivedCompetitionCount: nat;
+   pool: PrizePool;
+ };
+type AdminPrizeEntry = 
+ record {
+   amountE8s: nat;
+   blockIndex: opt nat;
+   rank: nat;
+   recipient: opt principal;
+ };
+type AdminCompetitionDetail = 
+ record {
+   firstPrizeE8s: nat;
+   paid: vec AdminPrizeEntry;
+   paying: vec AdminPrizeEntry;
+   poolE8s: nat;
+   runnerUpName: opt text;
+   runnerUpWins: opt nat;
+   sunday: Timestamp;
+   unclaimed: vec AdminPrizeEntry;
+   winnerName: opt text;
+   winnerWins: opt nat;
+ };
+type AdminCompetitionDate = 
+ record {
+   poolE8s: nat;
+   sunday: Timestamp;
+ };
+service : {
+  _initialize_access_control: () -> ();
+  _internet_identity_sign_in_finish: () -> (Result__1);
+  _internet_identity_sign_in_start: () -> (blob);
+  adminBackfillCompetition: (entry: BackfillEntry, winnerPrincipal:
+   principal) -> ();
+  adminBackfillPrizeAllocation: (sunday: Timestamp, poolE8s: nat) ->
+   (AllocationResult);
+  adminFinalizeCompetitions: () -> (FinalizeReport);
+  appendPbppInformation: (content: text) -> (PbppInformationEntry);
+  appendStorySection: ("text": text) -> ();
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  attemptMove: ("principal": PseudoPrincipal, fromSquare: nat, toSquare: 
+   nat, promotion: opt PieceType) -> (MoveResult);
+  burnAndPlay: ("principal": PseudoPrincipal, request: BurnAndPlayRequest) ->
+   (BurnAndPlayResult2);
+  burnNft: (tokenId: nat) -> (BurnOutcome);
+  burnNfts: (tokenIds: vec nat) -> (vec BurnOutcome);
+  castKickVote: ("principal": PseudoPrincipal, target: PseudoPrincipal) ->
+   (KickResult);
+  castVote: ("principal": PseudoPrincipal, vote: Vote) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  checkAllowance: (player: principal) -> (Allowance);
+  claimPrize: (competition: Timestamp, rank: nat, recipient: principal) ->
+   (ClaimResult);
+  claimStoryAuthorship: () -> (principal);
+  clearNftMintAttempts: () -> ();
+  clearPrizeAllocation: (sunday: Timestamp) -> (AllocationResult);
+  concludeByInsufficientMaterial: (now: Timestamp) -> ();
+  concludeBySpellCheck: (winner: Team, spellName: text, now: Timestamp) -> ();
+  createDrinkingAssignment: (capturedPiece: PieceType, lostTeam: Team,
+   moveIndex: nat) -> (DrinkingAssignment);
+  createEnPassantDrinkingAssignment: (lostTeam: Team, moveIndex: nat) ->
+   (DrinkingAssignment);
+  createEnPassantExerciseAssignments: (lostTeam: Team, moveIndex: nat) ->
+   (vec ExerciseAssignment);
+  createExerciseAssignment: (capturedPiece: PieceType, lostTeam: Team,
+   moveIndex: nat) -> (ExerciseAssignment);
+  execute: (qJson: text) -> (Result) query;
+  fillStoryGap: (index: nat, "text": text) -> ();
+  fireApproval: (player: PseudoPrincipal) -> (ApprovalResult);
+  getAdminAllocatedCompetitionDates: () -> (vec AdminCompetitionDate);
+  getAdminCompetitionDetail: (sunday: Timestamp) -> (AdminCompetitionDetail);
+  getAdminPrizeClaims: () -> (AdminPrizeOverview__1);
+  getAdminPrizeOverview: () -> (AdminPrizeOverview);
+  getApiDoc: () -> (text) query;
+  getApprovalState: (player: PseudoPrincipal) -> (ApprovalStateResult) query;
+  getArchivedPrizePool: (sunday: Timestamp) -> (opt ArchivedPrizePool) query;
+  getBets: () -> (vec BetRecord) query;
+  getBurnState: () -> (BurnStateSnapshot) query;
+  getCallerUserRole: () -> (UserRole) query;
+  getClaimStatus: (sunday: Timestamp) -> (ClaimStatus) query;
+  getCompFinalizeState: () -> (CompFinalizeState) query;
+  getCurrentPrizePool: () -> (PrizePool) query;
+  getDrinkingAssignments: () -> (vec DrinkingAssignment) query;
+  getExerciseAssignments: () -> (vec ExerciseAssignment) query;
+  getFirstPrizeForSunday: (sunday: Timestamp) -> (opt nat) query;
+  getGameNumber: () -> (nat) query;
+  getGameRecord: () -> (GameRecord) query;
+  getGameSettingsSnapshot: () -> (GameSettingsSnapshot) query;
+  getGameState: ("principal": PseudoPrincipal) -> (GameStateSnapshot) query;
+  getKickState: () -> (KickState) query;
+  getMintAttemptsByGame: () -> (vec MintAttemptGroup) query;
+  getMintStatusForPlayer: (walletAddress: text) -> (opt MintOutcome) query;
+  getMintStatusesForGame: () -> (vec MintStatusEntry) query;
+  getMyPrize: () -> (opt MyPrize);
+  getMyWins: () -> (MyWins) query;
+  getNextGameSettings: () -> (NextGameSettings) query;
+  getNftMetadata: (tokenId: nat) -> (opt MintMetadata) query;
+  getNftMetadataBatch: (tokenIds: vec nat) -> (vec opt MintMetadata) query;
+  getNftsForOwner: (owner: text) -> (vec nat);
+  getPastWinners: () -> (vec PastWinnerRow);
+  getPbppInformation: () -> (vec PbppInformationEntry);
+  getPrizeCanisterBalances: () -> (PrizeBalancesResult);
+  getRealBets: () -> (vec RealBetRecord) query;
+  getResults: () -> (vec ResultRecord) query;
+  getSettlements: () -> (vec SettlementRecord) query;
+  getShieldResolutionSnapshot: () -> (ShieldResolutionSnapshot) query;
+  getShieldState: () -> (ShieldState) query;
+  getSpellBoardState: () -> (SpellBoardView) query;
+  getSpellNameForGame: (gameNumber: nat, walletAddress: text) ->
+   (opt text) query;
+  getSpellTable: () -> (SpellTable) query;
+  getStoryAuthor: () -> (opt principal) query;
+  getStorySections: () -> (vec StoryRow) query;
+  getSundayCompStandings: (limit: nat) -> (vec CompStandingRow);
+  getSundayCompStatus: () -> (CompStatus) query;
+  getUpcomingAllocationStatuses: () -> (vec SundayAllocationStatus);
+  getVoteTally: () -> (VoteTally) query;
+  getWinCreditPreview: () ->
+   (record {
+      celebrationWinner: opt Team;
+      competitionLive: bool;
+      gameNumber: nat;
+      phase: GamePhase;
+      players: vec WinCreditPreviewPlayer;
+    }) query;
+  getWinnerRanking: (limit: nat) -> (vec WinnerRankingRow) query;
+  heartbeat: ("principal": PseudoPrincipal) -> (variant {
+                                                  err: text;
+                                                  ok;
+                                                });
+  isCallerAdmin: () -> (bool) query;
+  isInsufficientMaterialForSquares: (pieces:
+   vec record {
+         nat;
+         PieceType;
+         Team;
+       }) -> (bool) query;
+  login: ("principal": PseudoPrincipal, username: text, walletAddress:
+   opt text, walletSource: WalletSource) -> (LoginResult);
+  loginRanked: (rosterKey: text, username: text, walletAddress: opt text,
+   walletSource: WalletSource) -> (LoginResult);
+  logout: ("principal": PseudoPrincipal) -> ();
+  mintGameNfts: () -> ();
+  placeBet: (args: PlaceBetArgs) -> (PlaceBetResult);
+  pressStoryDelete: (index: nat) -> ();
+  pressStoryKeep: (index: nat) -> ();
+  previewPrizeAllocation: (poolE8s: nat) -> (PrizePreviewResult);
+  recordBurn: ("principal": PseudoPrincipal, request: BurnRequest) ->
+   (BurnResult);
+  recordConsentError: (player: PseudoPrincipal, error: text) -> ();
+  recordGameResult: (result: GameResult) -> (ResultRecord);
+  reportOutcome: (args: ReportOutcomeArgs) -> (ReportOutcomeResult);
+  requestNewGame: ("principal": PseudoPrincipal) -> (variant {
+                                                       err: text;
+                                                       ok;
+                                                     });
+  runMaintenance: (now: Timestamp) -> ();
+  savePrizeAllocation: (sunday: Timestamp, poolE8s: nat) ->
+   (AllocationResult);
+  schema: () -> (text) query;
+  setApprovalGranted: (player: PseudoPrincipal, granted: bool) ->
+   (ApprovalStateResult);
+  setJalcaPrincipal: ("principal": principal) -> ();
+  setPbppCanisterPrincipal: ("principal": principal) -> ();
+  setPrizeCanisterPrincipal: ("principal": principal) -> ();
+  startGame: (args: StartGameArgs) -> (StartGameResult);
+  submitBet: (pot: Pot, prediction: Prediction, playerPrincipal:
+   PseudoPrincipal, displayUsername: text, anonymous: bool) -> (BetRecord);
+  updateWalletAddress: ("principal": PseudoPrincipal, walletAddress:
+   opt text, walletSource: WalletSource) -> ();
+  withdrawKickVote: ("principal": PseudoPrincipal, target:
+   PseudoPrincipal) -> (KickResult);
+  writeStory: ("text": text) -> ();
+}
