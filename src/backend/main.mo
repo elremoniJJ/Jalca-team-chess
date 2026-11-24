@@ -313,6 +313,10 @@ actor {
   // the migration chain to the Forever section.
   let storyStore : StoryTypes.StoryStore;
 
+  // Forward reference: the clock (defined after the mixin) is what logins wake.
+  transient var wakeHook : () -> async () = func() : async () {};
+  transient var clockTimerId : ?Timer.TimerId = null;
+
   // Chess game public API. Receives the exercise and drinking stores so the
   // move path can make the single isolated create call on capture for each
   // domain (compute + append via the respective lib). Receives the nftStore
@@ -321,7 +325,7 @@ actor {
   // move-completion path can reset the per-turn burn flags when the turn
   // advances. No other exercise, drinking, NFT, or burn coupling exists in
   // the chess mixin.
-  include ChessGameApi(gameState, players, recorder, exerciseStore, drinkingStore, nftStore, voteStore, voteSnapshotStore, burnStore, kickStore, shieldResolutionStore, guaranteedStore, rosterBindings, winnerStore, compWinStore, compArchiveStore, compFinalizeMarker, compArchive10Store, compFinalize10Marker, prizeAllocationStore, prizeClaimStore);
+  include ChessGameApi(gameState, players, recorder, exerciseStore, drinkingStore, nftStore, voteStore, voteSnapshotStore, burnStore, kickStore, shieldResolutionStore, guaranteedStore, rosterBindings, winnerStore, compWinStore, compArchiveStore, compFinalizeMarker, compArchive10Store, compFinalize10Marker, prizeAllocationStore, prizeClaimStore, func() : async () { await wakeHook() });
 
   // Install the recurring maintenance timer on the install path. In Motoko,
   // top-level actor-body initialization expressions run once on install; on
@@ -349,8 +353,8 @@ actor {
     var anyHuman = false;
     for (pl in players.items.values()) { if (not pl.isBot) { anyHuman := true } };
     let idle = (not anyHuman) and gameState.gamePhase == #Paused;
-    ignore Timer.setTimer<system>(
-      #seconds(if (idle) 20 else ChessGame.maintenanceIntervalSeconds),
+    clockTimerId := ?Timer.setTimer<system>(
+      #seconds(if (idle) 300 else ChessGame.maintenanceIntervalSeconds),
       clockTick,
     );
     try {
@@ -360,7 +364,7 @@ actor {
     };
     try {
       let nowT = Time.now();
-      if (nowT - lastFinalizeCheck >= 60_000_000_000) {
+      if (nowT - lastFinalizeCheck >= 3_600_000_000_000) {
         lastFinalizeCheck := nowT;
         ignore SundayComp.finalizeNow(
           compWinStore,
@@ -376,9 +380,15 @@ actor {
     } catch _ {};
   };
 
+  func wakeClock() : async () {
+    switch (clockTimerId) { case (?id) Timer.cancelTimer(id); case null {} };
+    clockTimerId := ?Timer.setTimer<system>(#seconds(1), clockTick);
+  };
+  wakeHook := wakeClock;
+
   if (not clockArmed) {
     clockArmed := true;
-    ignore Timer.setTimer<system>(#seconds(ChessGame.maintenanceIntervalSeconds), clockTick);
+    clockTimerId := ?Timer.setTimer<system>(#seconds(ChessGame.maintenanceIntervalSeconds), clockTick);
   };
 
   // Re-arm the recurring maintenance timer after an upgrade. The timer handle
@@ -390,7 +400,7 @@ actor {
   system func postupgrade() {
     if (not clockArmed) {
       clockArmed := true;
-      ignore Timer.setTimer<system>(#seconds(ChessGame.maintenanceIntervalSeconds), clockTick);
+      clockTimerId := ?Timer.setTimer<system>(#seconds(ChessGame.maintenanceIntervalSeconds), clockTick);
     };
   };
 

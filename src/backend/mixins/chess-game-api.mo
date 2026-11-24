@@ -57,6 +57,7 @@ mixin (
   compFinalize10Marker : PrizeTypes.CompFinalize10Marker,
   prizeAllocationStore : PrizeTypes.PrizeAllocationStore,
   prizeClaimStore : PrizeClaimTypes.PrizeClaimStore,
+  wakeClock : () -> async (),
 ) {
   // Re-entry guard: true while a startNewGame is mid-flight (between the
   // caller's gate check and startNewGame's commit). Prevents a second
@@ -1698,7 +1699,9 @@ mixin (
     // teammates who have already moved this game.
     let startingTurns = ChessGame.lowestActiveTurnsForTeam(playersArray(), team, ?principal);
     let player = ChessGame.newPlayer(principal, finalUsername, team, now, walletAddress, walletSource, startingTurns);
+    let lobbyWasPaused = gameState.gamePhase == #Paused;
     appendPlayer(player);
+    if (lobbyWasPaused) { await wakeClock() };
 
     // If the game is in PAUSE_STATE (empty lobby), reassign teams then start
     // the game. startNewGame now self-validates balance (Item 3), so the local
