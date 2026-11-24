@@ -931,7 +931,11 @@ mixin (
     // Celebration or Draw window. Inactive marking still runs: a player who
     // stops pinging during the window is marked inactive, and is deleted on
     // the first pass after the window ends if still past the deletion cutoff.
-    let deletionSuppressed = gameState.gamePhase == #Celebration or gameState.gamePhase == #Draw;
+    let windowOpen = switch (gameState.celebrationEndTime) {
+      case (?end) now < end;
+      case null true;
+    };
+    let deletionSuppressed = (gameState.gamePhase == #Celebration or gameState.gamePhase == #Draw) and windowOpen;
     var removedAny = false;
     var i = 0;
     label scan while (i < players.items.size()) {
@@ -987,7 +991,10 @@ mixin (
     // Re-evaluate kicks ONCE after the whole pass (after deletions and after
     // setting isInactive), not once per player: the pass may have changed
     // several teams' active sizes, and a single re-check sees the final state.
-    await runKickResolutionFromGame();
+    let kickResolution = Kick.resolveKicksSync(kickStore, players, gameState);
+    for (km in kickResolution.kickedMoveMakers.values()) {
+      await assignMoveMakerForTeam(km.oldTeam);
+    };
     if (removedAny and totalPlayers() == 0) {
       pauseGame();
     };
@@ -1158,18 +1165,33 @@ mixin (
   transient var tickStage : Text = "none yet";
 
   public func runMaintenance(now : Types.Timestamp) : async () {
-    if (tickStage != "bot step done" and tickStage != "no players") {
+    if (tickStage != "bot step done" and tickStage != "no players" and tickStage != "no humans") {
       Debug.print("[tick] previous tick got as far as: " # tickStage);
     };
     tickStage := "started";
     if (players.items.size() == 0) { tickStage := "no players"; return };
+    var humanPresent = false;
+    for (p in players.items.values()) {
+      if (not p.isBot) { humanPresent := true };
+    };
+    if (not humanPresent) {
+      if (gameState.gamePhase != #Paused) { pauseGame() };
+      tickStage := "no humans";
+      return;
+    };
     await cleanupStalePlayers(now);
     tickStage := "cleanup done";
-    await checkTimerExpiry(now);
+    if (gameState.gamePhase == #Playing) { await checkTimerExpiry(now) };
     tickStage := "timeout check done";
-    await checkCelebrationExpiry(now);
+    if (gameState.gamePhase == #Celebration or gameState.gamePhase == #Draw) {
+      await checkCelebrationExpiry(now);
+    };
     tickStage := "celebration check done";
-    await botPlayIfDue();
+    let botToMove = switch (gameState.moveMakerPrincipal) {
+      case (?mp) mp == botRosterKey();
+      case null false;
+    };
+    if (gameState.gamePhase == #Playing and botToMove) { await botPlayIfDue() };
     tickStage := "bot step done";
   };
 

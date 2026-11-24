@@ -345,8 +345,10 @@ actor {
     ignore Timer.recurringTimer<system>(
       #seconds(ChessGame.maintenanceIntervalSeconds),
       func() : async () {
+        var anyHuman = false;
+        for (pl in players.items.values()) { if (not pl.isBot) { anyHuman := true } };
         try {
-          await runMaintenance(Time.now());
+          if (anyHuman or gameState.gamePhase != #Paused) { await runMaintenance(Time.now()) };
         } catch e {
           Debug.print("[tick] error: " # Error.message(e));
           // Swallow: a transient trap affects only this tick; the next tick retries.
@@ -392,8 +394,10 @@ actor {
       ignore Timer.recurringTimer<system>(
         #seconds(ChessGame.maintenanceIntervalSeconds),
         func() : async () {
+          var anyHuman = false;
+          for (pl in players.items.values()) { if (not pl.isBot) { anyHuman := true } };
           try {
-            await runMaintenance(Time.now());
+            if (anyHuman or gameState.gamePhase != #Paused) { await runMaintenance(Time.now()) };
           } catch e {
             Debug.print("[tick] error: " # Error.message(e));
             // Swallow: a transient trap affects only this tick; the next tick retries.
