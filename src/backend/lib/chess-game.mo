@@ -1122,6 +1122,98 @@ module {
     moves.toArray();
   };
 
+  // ---------- Bot move choice ----------
+
+  public func pieceValue(t : PieceType) : Nat {
+    switch (t) {
+      case (#Pawn) 1;
+      case (#Knight) 3;
+      case (#Bishop) 3;
+      case (#Rook) 5;
+      case (#Queen) 9;
+      case (#King) 0;
+    };
+  };
+
+  public func materialOf(board : [?Piece], team : Team) : Nat {
+    var total = 0;
+    for (sq in board.values()) {
+      switch (sq) {
+        case (?p) { if (p.color == team) { total += pieceValue(p.pieceType) } };
+        case null {};
+      };
+    };
+    total;
+  };
+
+  public let botSafetyPlies : Nat = 12;
+
+  public type BotStyle = { #Random; #Aggressive; #Ranked };
+
+  func moveGivesMate(board : [?Piece], move : Move, team : Team, blocked : [Nat]) : Bool {
+    let next = applyMove(board, move);
+    let opp = opponent(team);
+    isInCheck(next, opp) and allLegalMovesWithBlocked(next, opp, blocked).size() == 0;
+  };
+
+  func moveAllowsMateInOne(board : [?Piece], move : Move, team : Team, blocked : [Nat]) : Bool {
+    let next = applyMove(board, move);
+    let opp = opponent(team);
+    for (reply in allLegalMovesWithBlocked(next, opp, blocked).values()) {
+      if (moveGivesMate(next, reply, opp, blocked)) return true;
+    };
+    false;
+  };
+
+  func isCaptureMove(board : [?Piece], move : Move) : Bool {
+    switch (board[move.toSquare]) { case null false; case _ true };
+  };
+
+  func movesWhere(moves : [Move], keep : Move -> Bool) : [Move] {
+    let out = List.empty<Move>();
+    for (m in moves.values()) { if (keep(m)) out.add(m) };
+    out.toArray();
+  };
+
+  public func chooseBotMove(
+    board : [?Piece],
+    team : Team,
+    blocked : [Nat],
+    legal : [Move],
+    style : BotStyle,
+    safetyOn : Bool,
+    r : Nat,
+  ) : (Move, Text) {
+    let opp = opponent(team);
+    let mates = movesWhere(legal, func(m : Move) : Bool { moveGivesMate(board, m, team, blocked) });
+    if (mates.size() > 0) return (mates[r % mates.size()], "checkmate");
+
+    var pool = legal;
+    var tag = "";
+    if (safetyOn) {
+      let safe = movesWhere(legal, func(m : Move) : Bool { not moveAllowsMateInOne(board, m, team, blocked) });
+      if (safe.size() > 0 and safe.size() < legal.size()) { pool := safe; tag := "safe " };
+    };
+
+    func pick(arr : [Move], why : Text) : (Move, Text) { (arr[r % arr.size()], tag # why) };
+    let caps = movesWhere(pool, func(m : Move) : Bool { isCaptureMove(board, m) });
+
+    switch (style) {
+      case (#Random) pick(pool, "random");
+      case (#Aggressive) {
+        if (caps.size() > 0) pick(caps, "capture") else pick(pool, "random")
+      };
+      case (#Ranked) {
+        let checks = movesWhere(pool, func(m : Move) : Bool { isInCheck(applyMove(board, m), opp) });
+        let capChecks = movesWhere(caps, func(m : Move) : Bool { isInCheck(applyMove(board, m), opp) });
+        if (capChecks.size() > 0) pick(capChecks, "capture+check")
+        else if (checks.size() > 0) pick(checks, "check")
+        else if (caps.size() > 0) pick(caps, "capture")
+        else pick(pool, "random")
+      };
+    };
+  };
+
   // Determine whether the board has insufficient material for either side to
   // deliver checkmate — a draw by insufficient material. Kings are ignored.
   // Any pawn, rook, or queen on the board means mate is still possible, so

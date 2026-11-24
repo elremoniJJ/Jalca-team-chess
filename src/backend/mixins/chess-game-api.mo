@@ -1,6 +1,8 @@
 import Array "mo:core/Array";
 import Debug "mo:core/Debug";
 import Error "mo:core/Error";
+import IC "mo:core/InternetComputer";
+import Nat64 "mo:core/Nat64";
 import Int "mo:core/Int";
 import List "mo:core/List";
 import Nat "mo:core/Nat";
@@ -1230,7 +1232,22 @@ mixin (
       );
       Debug.print("[bot] legal moves found: " # Nat.toText(legal.size()));
       if (legal.size() == 0) return;
-      let m = legal[r % legal.size()];
+      let me = gameState.currentTurn;
+      let mine = ChessGame.materialOf(gameState.board, me);
+      let theirs = ChessGame.materialOf(gameState.board, ChessGame.opponent(me));
+      let style : ChessGame.BotStyle =
+        if (mine == theirs) { #Aggressive }
+        else if (mine < theirs) { if (mine <= 18) { #Ranked } else { #Aggressive } }
+        else if (mine - theirs <= 3) { #Aggressive }
+        else if (mine - theirs <= 5) { #Random }
+        else { #Aggressive };
+      let safetyOn = recorder.moves.size() <= ChessGame.botSafetyPlies;
+      var chosen : (Types.Move, Text) = (legal[r % legal.size()], "random");
+      let cost = IC.countInstructions(func() {
+        chosen := ChessGame.chooseBotMove(gameState.board, me, gameState.spellBoardState.blockedSquares, legal, style, safetyOn, r);
+      });
+      Debug.print("[bot] material " # Nat.toText(mine) # " vs " # Nat.toText(theirs) # ", choice: " # chosen.1 # ", cost " # Nat64.toText(cost) # " instr");
+      let m = chosen.0;
       let res = await attemptMove(botRosterKey(), m.fromSquare, m.toSquare, m.promotion);
       switch (res) {
         case (#err(msg)) { Debug.print("[bot] move rejected: " # msg) };
