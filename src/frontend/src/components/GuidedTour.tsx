@@ -62,7 +62,7 @@ export const GUIDED_TOUR_STEPS: GuidedTourStep[] = [
     targetOcid: "brand.wordmark.top",
     title: "JALCA",
     lines: [
-      "This is a multiplayer game without bots. A game can only begin when at least two players are logged in.",
+      "This is a multiplayer chess game with spells. A game can begin with two or more players logged in, or with one player and Jalca, the bot, who joins every new game.",
     ],
   },
   {

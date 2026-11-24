@@ -1067,6 +1067,61 @@ module {
     (not isInCheck(board, team)) and not hasAnyLegalMoveWithBlocked(board, team, blockedSquares);
   };
 
+  // List EVERY legal move for `team`, honouring the Bouvet Hondao blocked
+  // squares. Used by the bot to pick a move. It tries every (from, to) pair
+  // for the team's pieces and keeps the ones the game's own validator
+  // (isValidMoveWithBlocked) accepts, so it can never disagree with the real
+  // rules. Castling (king moves two squares) and en passant (pawn moves
+  // diagonally to an empty square) are covered because the validator accepts
+  // them. A pawn reaching the last rank produces four moves, one for each
+  // promotion piece (Queen, Rook, Bishop, Knight).
+  public func allLegalMovesWithBlocked(
+    board : [?Piece],
+    team : Team,
+    blockedSquares : [Nat],
+  ) : [Move] {
+    let moves = List.empty<Move>();
+    let promotionTypes : [PieceType] = [#Queen, #Rook, #Bishop, #Knight];
+    let lastRank = if (team == #White) { 7 } else { 0 };
+    var from = 0;
+    while (from < 64) {
+      switch (board[from]) {
+        case (?p) {
+          if (p.color == team) {
+            // Candidate targets: only squares this piece can actually reach
+            // (its pseudo-legal destinations), plus the two castling squares for
+            // a king on its start square. Never every square on the board: the
+            // blocked-square path helper assumes the move runs along a line, and
+            // would loop forever on a target like a rook going a1 -> b3.
+            // (En passant is not offered to the bot: the game does not track
+            // the previous move.)
+            let targets = List.empty<Nat>();
+            for (to in pseudoMoves(board, from).values()) { targets.add(to) };
+            let kingStart = if (team == #White) { 4 } else { 60 };
+            if (p.pieceType == #King and from == kingStart) {
+              targets.add(square(6, rank(from)));
+              targets.add(square(2, rank(from)));
+            };
+            for (to in targets.values()) {
+              if (p.pieceType == #Pawn and rank(to) == lastRank) {
+                for (t in promotionTypes.values()) {
+                  let m : Move = { fromSquare = from; toSquare = to; promotion = ?t };
+                  if (isValidMoveWithBlocked(board, m, team, blockedSquares)) moves.add(m);
+                };
+              } else {
+                let m : Move = { fromSquare = from; toSquare = to; promotion = null };
+                if (isValidMoveWithBlocked(board, m, team, blockedSquares)) moves.add(m);
+              };
+            };
+          };
+        };
+        case null {};
+      };
+      from += 1;
+    };
+    moves.toArray();
+  };
+
   // Determine whether the board has insufficient material for either side to
   // deliver checkmate — a draw by insufficient material. Kings are ignored.
   // Any pawn, rook, or queen on the board means mate is still possible, so
@@ -1235,12 +1290,12 @@ module {
     team : Team,
     excludePrincipal : ?PseudoPrincipal,
   ) : async ?PseudoPrincipal {
-    // Active teammates only. The bot is skipped so it is never chosen as
-    // Move_Maker; both pick sites (assignMoveMakerForTeam and the attemptMove
-    // inline pick) delegate here, so this single filter covers both.
+    // Active teammates only. The bot is a normal candidate: it takes its turn
+    // as Move_Maker in the same fair rotation as the humans. Both pick sites
+    // (assignMoveMakerForTeam and the attemptMove inline pick) delegate here.
     let candidates = List.empty<Player>();
     for (p in players.values()) {
-      if (p.team == team and not p.isInactive and not p.isBot) candidates.add(p);
+      if (p.team == team and not p.isInactive) candidates.add(p);
     };
     // Exclude the player who just moved, but only when more than one candidate
     // remains — a lone active teammate is still picked so the game never stalls.

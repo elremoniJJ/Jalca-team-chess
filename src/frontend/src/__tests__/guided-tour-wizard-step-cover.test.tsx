@@ -97,7 +97,7 @@ describe("GuidedTour new first step (JALCA)", () => {
     // The new step is first in the declared step list.
     expect(GUIDED_TOUR_STEPS[0].title).toBe("JALCA");
     expect(GUIDED_TOUR_STEPS[0].lines).toEqual([
-      "This is a multiplayer game without bots. A game can only begin when at least two players are logged in.",
+      "This is a multiplayer chess game with spells. A game can begin with two or more players logged in, or with one player and Jalca, the bot, who joins every new game.",
     ]);
 
     // The card opens on it: counter reads "1 of 9" and the heading is "JALCA".
@@ -110,7 +110,7 @@ describe("GuidedTour new first step (JALCA)", () => {
     ).toBeInTheDocument();
     expect(
       within(card).getByText(
-        "This is a multiplayer game without bots. A game can only begin when at least two players are logged in.",
+        "This is a multiplayer chess game with spells. A game can begin with two or more players logged in, or with one player and Jalca, the bot, who joins every new game.",
       ),
     ).toBeInTheDocument();
   });

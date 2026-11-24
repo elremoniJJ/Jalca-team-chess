@@ -1,9 +1,11 @@
 import Array "mo:core/Array";
 import Debug "mo:core/Debug";
+import Error "mo:core/Error";
 import Int "mo:core/Int";
 import List "mo:core/List";
 import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
+import Random "mo:core/Random";
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
 import Timer "mo:core/Timer";
@@ -178,6 +180,23 @@ mixin (
   // rule); only the gate is human-gated.
   func humanWhiteCount() : Nat = ChessGame.humanTeamCount(playersArray(), #White);
   func humanBlackCount() : Nat = ChessGame.humanTeamCount(playersArray(), #Black);
+
+  // The new-game start rule. A game may start when at least one FRESH HUMAN is
+  // present and BOTH teams have someone on them. The bot counts as a team
+  // member (it always plays), but the bot alone can never start a game: at
+  // least one fresh human is required. So one human plus the bot is enough, and
+  // so are two humans, one per team.
+  func gateOk() : Bool {
+    var w = humanWhiteCount();
+    var b = humanBlackCount();
+    if (w + b < 1) return false;
+    for (p in players.items.values()) {
+      if (p.isBot) {
+        if (p.team == #White) { w += 1 } else { b += 1 };
+      };
+    };
+    w >= 1 and b >= 1;
+  };
 
   // Count ACTIVE fresh players on a team. Used by Move_Maker selection and
   // by the deletion path's "is there anyone left to promote" check: an
@@ -392,16 +411,19 @@ mixin (
   // and re-checks. If STILL unbalanced, it returns early WITHOUT starting (no
   // board reset, no recorder activation, no exercise/drinking/NFT clearing).
   func startNewGame(now : Types.Timestamp) : async () {
+    // Make sure the bot is present and fresh before the start rule is checked.
+    await ensureBot(now);
+    Debug.print("[start] startNewGame running, gateOk=" # debug_show (gateOk()));
     // Balance guard — validate BEFORE mutating any state. The guard counts
     // HUMANS only (the single bot is excluded): a game needs one human per
     // team, so the bot plus one human must NOT start a game. Without this the
     // game would start on the first human login, before any vote, and stall
     // when the opening's turn belongs to the bot's team (the bot is never
     // chosen as Move_Maker).
-    if (not (humanWhiteCount() >= 1 and humanBlackCount() >= 1)) {
+    if (not gateOk()) {
       // Self-heal: reassign teams among fresh players and re-check.
       await reassignTeams();
-      if (not (humanWhiteCount() >= 1 and humanBlackCount() >= 1)) {
+      if (not gateOk()) {
         // Still unbalanced — refuse to start. Do NOT reset the board, do NOT
         // activate the recorder, do NOT clear exercise/drinking/NFT stores.
         // Fix B: clear the re-entry guard on this early return so it never
@@ -414,7 +436,7 @@ mixin (
     // board reset. A concurrent message could corrupt balance between the
     // entry gate above and this point. Refuse to commit the reset on an
     // unbalanced state. Clear the guard on this early return (Fix B).
-    if (not (humanWhiteCount() >= 1 and humanBlackCount() >= 1)) {
+    if (not gateOk()) {
       newGameStarting := false;
       return;
     };
@@ -472,7 +494,7 @@ mixin (
     // been reset, but no recorder/exercise/drinking/NFT clearing has happened
     // yet, so the state is recoverable by the next startNewGame call. Clear
     // the guard on this early return (Fix B).
-    if (not (humanWhiteCount() >= 1 and humanBlackCount() >= 1)) {
+    if (not gateOk()) {
       newGameStarting := false;
       return;
     };
@@ -586,6 +608,7 @@ mixin (
         start_time = now.toNat();
       });
       await assignMoveMakerForTeam(gameState.currentTurn);
+      Debug.print("[start] new game started");
     } finally {
       // Clear the re-entry guard on every exit path of startNewGame.
       newGameStarting := false;
@@ -1077,6 +1100,9 @@ mixin (
     // The recorder data remains intact for the modal until startNewGame
     // itself resets it under the newGameStarting guard.
     // Reassign teams using the sequential true-random algorithm.
+    // The bot is marked stale at game end like everyone else; refresh it first
+    // so it takes part in the team reassignment below.
+    await ensureBot(now);
     await reassignTeams();
     // New-game gate: fire only when at least one FRESH HUMAN is present on
     // EACH team (humanWhiteCount()/humanBlackCount() are fresh-gated and
@@ -1089,7 +1115,8 @@ mixin (
     // readiness via the "New game" button / re-login). The modal does not
     // auto-dismiss; players linger on it until they explicitly choose New game
     // or Log out.
-    if (humanWhiteCount() >= 1 and humanBlackCount() >= 1) {
+    Debug.print("[start] celebration over: gateOk=" # debug_show (gateOk()) # " alreadyStarting=" # debug_show newGameStarting);
+    if (gateOk()) {
       // Fix B: re-entry guard — if a startNewGame is already mid-flight
       // (another message reached this branch first and is awaiting inside
       // startNewGame), do NOT start a second one. The in-flight start will
@@ -1128,11 +1155,65 @@ mixin (
   // stale players still runs the pass so cleanupStalePlayers can prune them
   // and pause the emptied lobby — the existing behavior. totalPlayers() == 0
   // with stale players present would wrongly skip that cleanup.
+  transient var tickStage : Text = "none yet";
+
   public func runMaintenance(now : Types.Timestamp) : async () {
-    if (players.items.size() == 0) return;
+    Debug.print("[tick] previous tick got as far as: " # tickStage);
+    tickStage := "started";
+    if (players.items.size() == 0) { tickStage := "no players"; return };
     await cleanupStalePlayers(now);
+    tickStage := "cleanup done";
     await checkTimerExpiry(now);
+    tickStage := "timeout check done";
     await checkCelebrationExpiry(now);
+    tickStage := "celebration check done";
+    await botPlayIfDue();
+    tickStage := "bot step done";
+  };
+
+  // The bot's move. If a game is being played and the bot is the current
+  // Move_Maker, play ONE uniformly random legal move (no strategy at all)
+  // through the normal attemptMove path, so every rule and recorder step
+  // applies exactly as for a human. It runs on the 5-second maintenance tick,
+  // so the bot moves 0 to 5 seconds after its turn starts. The random number
+  // is drawn first and the legal moves are listed AFTER the await, so the list
+  // always matches the board as it is when the move is made. If anything
+  // changed meanwhile, attemptMove simply rejects the move and the next tick
+  // tries again.
+  func botPlayIfDue() : async () {
+    func botIsMoveMaker() : Bool {
+      switch (gameState.moveMakerPrincipal) {
+        case (?mp) mp == botRosterKey();
+        case null false;
+      };
+    };
+    if (gameState.gamePhase != #Playing) return;
+    if (not botIsMoveMaker()) return;
+    Debug.print("[bot] my turn, trying to move");
+    if (moveInProgress) {
+      Debug.print("[bot] skipped: a move is already in progress");
+      return;
+    };
+    try {
+      let r = await Random.natRange(0, 1_000_000);
+      if (gameState.gamePhase != #Playing) return;
+      if (not botIsMoveMaker()) return;
+      let legal = ChessGame.allLegalMovesWithBlocked(
+        gameState.board,
+        gameState.currentTurn,
+        gameState.spellBoardState.blockedSquares,
+      );
+      Debug.print("[bot] legal moves found: " # Nat.toText(legal.size()));
+      if (legal.size() == 0) return;
+      let m = legal[r % legal.size()];
+      let res = await attemptMove(botRosterKey(), m.fromSquare, m.toSquare, m.promotion);
+      switch (res) {
+        case (#err(msg)) { Debug.print("[bot] move rejected: " # msg) };
+        case (_) { Debug.print("[bot] move played") };
+      };
+    } catch (e) {
+      Debug.print("[bot] error: " # Error.message(e));
+    };
   };
 
   // Safely mint NFTs for all eligible players at game conclusion. Wraps

@@ -262,6 +262,15 @@ function PlayerRow({
         </span>
         <span className="flex min-w-0 flex-1 items-center gap-1.5">
           <span className="truncate font-medium">{player.username}</span>
+          {player.isBot && (
+            <span
+              data-ocid={`player_list.bot_badge.${index}`}
+              className="shrink-0 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground"
+              title="Computer player"
+            >
+              bot
+            </span>
+          )}
           {player.isMoveMaker && (
             <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground/80">
               to move

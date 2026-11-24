@@ -944,7 +944,12 @@ function RecordBody({
  * visual language: a bordered card with a small uppercase section label,
  * primary-tinted accents, and the same row rhythm as the leaderboards.
  */
-function MintStatusSection({ attempts }: { attempts: MintAttempt[] }) {
+function MintStatusSection({
+  attempts: allAttempts,
+}: { attempts: MintAttempt[] }) {
+  // The bot ("Jalca" is a reserved name, so no human can have it) never
+  // receives NFTs, so it is left out of the mint results list.
+  const attempts = allAttempts.filter((a) => a.recipientUsername !== "Jalca");
   const rows: MintStatusRow[] = attempts.map(toMintStatusRow);
   const summary: MintStatusSummary = summarizeMintAttempts(attempts);
 

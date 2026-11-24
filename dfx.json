@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "canisters": {
+    "backend": {
+      "type": "custom",
+      "build": "mops build --no-check-deploy",
+      "wasm": "src/backend/dist/backend.wasm",
+      "candid": "src/backend/dist/backend.did"
+    },
+    "frontend": {
+      "type": "assets",
+      "source": ["src/frontend/dist"],
+      "dependencies": ["backend"]
+    }
+  }
+}

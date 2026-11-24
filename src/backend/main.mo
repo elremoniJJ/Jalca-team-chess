@@ -6,6 +6,8 @@ import Principal "mo:core/Principal";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Timer "mo:core/Timer";
+import Debug "mo:core/Debug";
+import Error "mo:core/Error";
 import AccessControl "mo:caffeineai-authorization/access-control";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import OQL "mo:caffeineai-oql";
@@ -336,7 +338,8 @@ actor {
     func() : async () {
       try {
         await runMaintenance(Time.now());
-      } catch _ {
+      } catch e {
+        Debug.print("[tick] error: " # Error.message(e));
         // Swallow: a transient trap affects only this tick; the next tick retries.
       };
       // Archive any competition whose day has fully passed, so a competition
@@ -373,7 +376,8 @@ actor {
       func() : async () {
         try {
           await runMaintenance(Time.now());
-        } catch _ {
+        } catch e {
+          Debug.print("[tick] error: " # Error.message(e));
           // Swallow: a transient trap affects only this tick; the next tick retries.
         };
         try {

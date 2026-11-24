@@ -79,6 +79,14 @@ export function MoveMakerIndicator({
         <span className="flex min-w-0 items-center gap-2 text-base font-bold text-foreground">
           <Crown className="size-5 shrink-0 text-accent" />
           <span className="truncate">{moveMakerName}</span>
+          {moveMakerPlayer?.isBot && (
+            <span
+              data-ocid="move_maker_indicator.bot_badge"
+              className="shrink-0 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground"
+            >
+              bot
+            </span>
+          )}
         </span>
       )}
     </div>

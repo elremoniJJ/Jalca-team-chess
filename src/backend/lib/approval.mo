@@ -28,7 +28,7 @@ module {
 
   // The spender the player approves: JALCA's own backend principal. Retained
   // for the local mirror's display fields; the burn no longer requires it.
-  public let spenderPrincipal : Text = "py4x3-piaaa-aaaai-ax2ya-cai";
+  public let spenderPrincipal : Text = "3d6d4-3aaaa-aaaao-qqoga-cai";
 
   // Construct a fresh, empty approval-domain store cell. Used by the
   // migration to initialize the approval domain's stable state.
