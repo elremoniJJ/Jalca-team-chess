@@ -28,6 +28,7 @@ import BurnTypes "../types/burn";
 import Burn "../lib/burn";
 import ShieldResolutionTypes "../types/shield-and-spell-resolution";
 import ShieldResolution "../lib/shield-and-spell-resolution";
+import BotSpells "../lib/bot-spells";
 import RealBet "../lib/real-bet";
 import KickTypes "../types/kick";
 import Kick "../lib/kick";
@@ -1222,9 +1223,61 @@ mixin (
       return;
     };
     try {
-      let r = await Random.natRange(0, 1_000_000);
+      let r = await Random.natRange(0, 1_000_000_000_000);
+      // Low digits steer the move, high digits steer the spell.
+      let rMove = r % 1_000_000;
+      let rSpell = r / 1_000_000;
       if (gameState.gamePhase != #Playing) return;
       if (not botIsMoveMaker()) return;
+      // ---- Free spell: from his second turn on, if spells are enabled for
+      // this game. The level range depends on the material balance:
+      //   equal                      -> Basic..Skilled
+      //   behind, more than 18 left  -> Advanced..Mastery
+      //   behind, 18 or less left    -> Mastery..OP
+      //   ahead by 1 to 5            -> Basic only
+      //   ahead by more than 5       -> no spell
+      let spellTeam = gameState.currentTurn;
+      let botTurns = switch (findPlayer(botRosterKey())) {
+        case (?bp) bp.turnsThisGame;
+        case null 0;
+      };
+      var gameEnded = false;
+      if (gameState.spellUseEnabled and botTurns >= 2 and not burnStore.state.burnOccurredThisTurn) {
+        let spellMine = ChessGame.materialOf(gameState.board, spellTeam);
+        let spellTheirs = ChessGame.materialOf(gameState.board, ChessGame.opponent(spellTeam));
+        let levels : ?(Nat, Nat) =
+          if (spellMine == spellTheirs) { ?(1, 2) }
+          else if (spellMine < spellTheirs) { if (spellMine <= 18) { ?(4, 5) } else { ?(3, 4) } }
+          else if (spellMine - spellTheirs <= 5) { ?(1, 1) }
+          else { null };
+        switch (levels) {
+          case (?(lo, hi)) {
+            switch (BotSpells.pickSpell(gameState.board, spellTeam, lo, hi, rSpell)) {
+              case (?sp) {
+                let power = BotSpells.powerFor(rSpell);
+                let cast = ShieldResolution.botCast(shieldResolutionStore, burnStore, gameState, spellTeam, sp.name, sp.kind, power);
+                Debug.print("[bot] cast " # sp.name # " (level " # Nat.toText(sp.level) # ", power " # Nat.toText(power) # "), fired=" # debug_show (switch (cast.resolution) { case (?x) x.firesOnBoard; case null false }));
+                switch (cast.spellCheckWin) {
+                  case (?winner) {
+                    await concludeBySpellCheck(winner, cast.spellName, Time.now());
+                    gameEnded := true;
+                  };
+                  case null {
+                    if (cast.insufficientMaterial) {
+                      await concludeByInsufficientMaterial(Time.now());
+                      gameEnded := true;
+                    };
+                  };
+                };
+              };
+              case null { Debug.print("[bot] no useful spell in range") };
+            };
+          };
+          case null {};
+        };
+      };
+      if (gameEnded or gameState.gamePhase != #Playing) return;
+
       let legal = ChessGame.allLegalMovesWithBlocked(
         gameState.board,
         gameState.currentTurn,
@@ -1242,9 +1295,9 @@ mixin (
         else if (mine - theirs <= 5) { #Random }
         else { #Aggressive };
       let safetyOn = recorder.moves.size() <= ChessGame.botSafetyPlies;
-      var chosen : (Types.Move, Text) = (legal[r % legal.size()], "random");
+      var chosen : (Types.Move, Text) = (legal[rMove % legal.size()], "random");
       let cost = IC.countInstructions(func() {
-        chosen := ChessGame.chooseBotMove(gameState.board, me, gameState.spellBoardState.blockedSquares, legal, style, safetyOn, r);
+        chosen := ChessGame.chooseBotMove(gameState.board, me, gameState.spellBoardState.blockedSquares, legal, style, safetyOn, rMove);
       });
       Debug.print("[bot] material " # Nat.toText(mine) # " vs " # Nat.toText(theirs) # ", choice: " # chosen.1 # ", cost " # Nat64.toText(cost) # " instr");
       let m = chosen.0;

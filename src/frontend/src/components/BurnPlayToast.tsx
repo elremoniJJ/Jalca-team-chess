@@ -199,7 +199,10 @@ export function BurnPlayToast({ toasts, onClose }: BurnPlayToastProps) {
                     {result.spellName} — {spellKindLabel(result.kind)}
                   </span>
                   <span className="burn-play-toast-detail">
-                    NFT #{result.tokenId.toString()} · {gameNumber} ·{" "}
+                    {Number(result.tokenId) >= 999999999999
+                      ? "Free spell"
+                      : `NFT #${result.tokenId.toString()}`}{" "}
+                    · {gameNumber} ·{" "}
                     {teamLabel(result.team)} · {resolutionText(result)}
                   </span>
                 </div>

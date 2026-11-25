@@ -386,6 +386,28 @@ module {
             ?res;
           };
         };
+        let result = applyResolvedSpell(state, burnStore, gameState, team, defender, spellName, gameNumber, request.tokenId, request.kind, resolution);
+        return #ok({ burn = result; shieldState = getShieldState(state) });
+      };
+    };
+  };
+
+  // Apply a resolved spell: board effects (when it fired), the insufficient-
+  // material and spell-check checks, and the bookkeeping (last result, spell
+  // log, one-burn-per-turn flags). Shared by the human burn-and-play path and
+  // Jalca's free spells so both behave identically.
+  func applyResolvedSpell(
+    state : ShieldResolutionStore,
+    burnStore : BurnTypes.BurnStore,
+    gameState : ChessGameTypes.GameState,
+    team : Team,
+    defender : Team,
+    spellName : Text,
+    gameNumber : Nat,
+    tokenId : Nat,
+    kind : SpellKind,
+    resolution : ?SpellResolution,
+  ) : BurnAndPlayResult {
         // Apply the board effect when the spell fired on the board.
         let firesOnBoard = switch (resolution) {
           case null false;
@@ -557,11 +579,11 @@ module {
           case (?res) castOutcomeForResolution(res);
         };
         let result : BurnAndPlayResult = {
-          tokenId = request.tokenId;
+          tokenId = tokenId;
           spellName;
           gameNumber = ?gameNumber;
           team;
-          kind = request.kind;
+          kind = kind;
           resolution;
           appliedColour;
           appliedOpponentImage;
@@ -573,12 +595,57 @@ module {
           insufficientMaterial;
         };
         state.state.lastBurnAndPlay := ?result;
-        Burn.appendBurnedSpell(burnStore, team, spellName, gameNumber, categoryForKind(request.kind), castOutcome);
+        Burn.appendBurnedSpell(burnStore, team, spellName, gameNumber, categoryForKind(kind), castOutcome);
         burnStore.state.burnOccurredThisTurn := true;
         burnStore.state.burnedByTeam := ?team;
-        return #ok({ burn = result; shieldState = getShieldState(state) });
-      };
+        result;
+  };
+
+  // Token id shown for Jalca's free spells (no NFT is burned for them). The
+  // frontend recognises this value and shows "Free spell".
+  public let botTokenId : Nat = 999_999_999_999;
+
+  // Jalca casts a free spell of the given kind with the given power (2..6).
+  // No NFT is burned. The spell meets the defending team's shield exactly like
+  // a human's spell of that power (same rule as resolveSpell). The caller
+  // decides whether the spell may be cast at all.
+  public func botCast(
+    state : ShieldResolutionStore,
+    burnStore : BurnTypes.BurnStore,
+    gameState : ChessGameTypes.GameState,
+    team : Team,
+    spellName : Text,
+    kind : SpellKind,
+    power : Nat,
+  ) : BurnAndPlayResult {
+    let defender : Team = switch (team) {
+      case (#White) #Black;
+      case (#Black) #White;
     };
+    let shieldBefore = switch (defender) {
+      case (#White) state.state.whiteShield;
+      case (#Black) state.state.blackShield;
+    };
+    // Same firing rule as resolveSpell: fires when the power exceeds the
+    // shield or is at least double it; otherwise it only reduces the shield.
+    let fires = power > shieldBefore or power >= 2 * shieldBefore;
+    let shieldAfter = if (fires) { 0 } else if (power >= shieldBefore) { 0 } else { shieldBefore - power };
+    let res : SpellResolution = {
+      attacker = team;
+      defender;
+      spellValue = power;
+      shieldBefore;
+      shieldAfter;
+      outcome = if (fires) { #fired } else { #cancelled };
+      firesOnBoard = fires;
+    };
+    switch (defender) {
+      case (#White) state.state.whiteShield := res.shieldAfter;
+      case (#Black) state.state.blackShield := res.shieldAfter;
+    };
+    // Display only: the spell log shows "game N - power".
+    let shownGame = if (gameState.gameNumber > power) { gameState.gameNumber - power } else { 0 };
+    applyResolvedSpell(state, burnStore, gameState, team, defender, spellName, shownGame, botTokenId, kind, ?res);
   };
 
   // Reset the per-game shield state at the start of a new game: both shields
