@@ -1,0 +1,290 @@
+{
+ "white_king_e1": {
+  "name": "Aldric",
+  "colour": "white",
+  "type": "king",
+  "square": "e1",
+  "move": "white_king_e1_move_Aldric.mp3",
+  "capture": "white_king_e1_capture_Aldric.mp3",
+  "captured": "white_king_e1_captured_Aldric.mp3"
+ },
+ "black_king_e8": {
+  "name": "Malachar",
+  "colour": "black",
+  "type": "king",
+  "square": "e8",
+  "move": "black_king_e8_move_Malachar.mp3",
+  "capture": "black_king_e8_capture_Malachar.mp3",
+  "captured": "black_king_e8_captured_Malachar.mp3"
+ },
+ "white_queen_d1": {
+  "name": "Isolde",
+  "colour": "white",
+  "type": "queen",
+  "square": "d1",
+  "move": "white_queen_d1_move_Isolde.mp3",
+  "capture": "white_queen_d1_capture_Isolde.mp3",
+  "captured": "white_queen_d1_captured_Isolde.mp3"
+ },
+ "black_queen_d8": {
+  "name": "Jocelyn",
+  "colour": "black",
+  "type": "queen",
+  "square": "d8",
+  "move": "black_queen_d8_move_Jocelyn.mp3",
+  "capture": "black_queen_d8_capture_Jocelyn.mp3",
+  "captured": "black_queen_d8_captured_Jocelyn.mp3"
+ },
+ "white_rook_a1": {
+  "name": "Charles",
+  "colour": "white",
+  "type": "rook",
+  "square": "a1",
+  "move": "white_rook_a1_move_Charles.mp3",
+  "capture": "white_rook_a1_capture_Charles.mp3",
+  "captured": "white_rook_a1_captured_Charles.mp3"
+ },
+ "white_rook_h1": {
+  "name": "Brucie",
+  "colour": "white",
+  "type": "rook",
+  "square": "h1",
+  "move": "white_rook_h1_move_Brucie.mp3",
+  "capture": "white_rook_h1_capture_Brucie.mp3",
+  "captured": "white_rook_h1_captured_Brucie.mp3"
+ },
+ "black_rook_a8": {
+  "name": "Grim",
+  "colour": "black",
+  "type": "rook",
+  "square": "a8",
+  "move": "black_rook_a8_move_Grim.mp3",
+  "capture": "black_rook_a8_capture_Grim.mp3",
+  "captured": "black_rook_a8_captured_Grim.mp3"
+ },
+ "black_rook_h8": {
+  "name": "Vex",
+  "colour": "black",
+  "type": "rook",
+  "square": "h8",
+  "move": "black_rook_h8_move_Vex.mp3",
+  "capture": "black_rook_h8_capture_Vex.mp3",
+  "captured": "black_rook_h8_captured_Vex.mp3"
+ },
+ "white_bishop_c1": {
+  "name": "Father Oswin",
+  "colour": "white",
+  "type": "bishop",
+  "square": "c1",
+  "move": "white_bishop_c1_move_Father-Oswin.mp3",
+  "capture": "white_bishop_c1_capture_Father-Oswin.mp3",
+  "captured": "white_bishop_c1_captured_Father-Oswin.mp3"
+ },
+ "white_bishop_f1": {
+  "name": "Sister Maren",
+  "colour": "white",
+  "type": "bishop",
+  "square": "f1",
+  "move": "white_bishop_f1_move_Sister-Maren.mp3",
+  "capture": "white_bishop_f1_capture_Sister-Maren.mp3",
+  "captured": "white_bishop_f1_captured_Sister-Maren.mp3"
+ },
+ "black_bishop_c8": {
+  "name": "Magda",
+  "colour": "black",
+  "type": "bishop",
+  "square": "c8",
+  "move": "black_bishop_c8_move_Magda.mp3",
+  "capture": "black_bishop_c8_capture_Magda.mp3",
+  "captured": "black_bishop_c8_captured_Magda.mp3"
+ },
+ "black_bishop_f8": {
+  "name": "Corvin",
+  "colour": "black",
+  "type": "bishop",
+  "square": "f8",
+  "move": "black_bishop_f8_move_Corvin.mp3",
+  "capture": "black_bishop_f8_capture_Corvin.mp3",
+  "captured": "black_bishop_f8_captured_Corvin.mp3"
+ },
+ "white_knight_b1": {
+  "name": "Pip",
+  "colour": "white",
+  "type": "knight",
+  "square": "b1",
+  "move": "white_knight_b1_move_Pip.mp3",
+  "capture": "white_knight_b1_capture_Pip.mp3",
+  "captured": "white_knight_b1_captured_Pip.mp3"
+ },
+ "white_knight_g1": {
+  "name": "Sir Rowan",
+  "colour": "white",
+  "type": "knight",
+  "square": "g1",
+  "move": "white_knight_g1_move_Sir-Rowan.mp3",
+  "capture": "white_knight_g1_capture_Sir-Rowan.mp3",
+  "captured": "white_knight_g1_captured_Sir-Rowan.mp3"
+ },
+ "black_knight_b8": {
+  "name": "Rask",
+  "colour": "black",
+  "type": "knight",
+  "square": "b8",
+  "move": "black_knight_b8_move_Rask.mp3",
+  "capture": "black_knight_b8_capture_Rask.mp3",
+  "captured": "black_knight_b8_captured_Rask.mp3"
+ },
+ "black_knight_g8": {
+  "name": "Sable",
+  "colour": "black",
+  "type": "knight",
+  "square": "g8",
+  "move": "black_knight_g8_move_Sable.mp3",
+  "capture": "black_knight_g8_capture_Sable.mp3",
+  "captured": "black_knight_g8_captured_Sable.mp3"
+ },
+ "white_pawn_a2": {
+  "name": "Tam",
+  "colour": "white",
+  "type": "pawn",
+  "square": "a2",
+  "move": "white_pawn_a2_move_Tam.mp3",
+  "capture": "white_pawn_a2_capture_Tam.mp3",
+  "captured": "white_pawn_a2_captured_Tam.mp3"
+ },
+ "white_pawn_b2": {
+  "name": "Nell",
+  "colour": "white",
+  "type": "pawn",
+  "square": "b2",
+  "move": "white_pawn_b2_move_Nell.mp3",
+  "capture": "white_pawn_b2_capture_Nell.mp3",
+  "captured": "white_pawn_b2_captured_Nell.mp3"
+ },
+ "white_pawn_c2": {
+  "name": "Bram",
+  "colour": "white",
+  "type": "pawn",
+  "square": "c2",
+  "move": "white_pawn_c2_move_Bram.mp3",
+  "capture": "white_pawn_c2_capture_Bram.mp3",
+  "captured": "white_pawn_c2_captured_Bram.mp3"
+ },
+ "white_pawn_d2": {
+  "name": "Sera",
+  "colour": "white",
+  "type": "pawn",
+  "square": "d2",
+  "move": "white_pawn_d2_move_Sera.mp3",
+  "capture": "white_pawn_d2_capture_Sera.mp3",
+  "captured": "white_pawn_d2_captured_Sera.mp3"
+ },
+ "white_pawn_e2": {
+  "name": "Odo",
+  "colour": "white",
+  "type": "pawn",
+  "square": "e2",
+  "move": "white_pawn_e2_move_Odo.mp3",
+  "capture": "white_pawn_e2_capture_Odo.mp3",
+  "captured": "white_pawn_e2_captured_Odo.mp3"
+ },
+ "white_pawn_f2": {
+  "name": "Wren",
+  "colour": "white",
+  "type": "pawn",
+  "square": "f2",
+  "move": "white_pawn_f2_move_Wren.mp3",
+  "capture": "white_pawn_f2_capture_Wren.mp3",
+  "captured": "white_pawn_f2_captured_Wren.mp3"
+ },
+ "white_pawn_g2": {
+  "name": "Hal",
+  "colour": "white",
+  "type": "pawn",
+  "square": "g2",
+  "move": "white_pawn_g2_move_Hal.mp3",
+  "capture": "white_pawn_g2_capture_Hal.mp3",
+  "captured": "white_pawn_g2_captured_Hal.mp3"
+ },
+ "white_pawn_h2": {
+  "name": "Mira",
+  "colour": "white",
+  "type": "pawn",
+  "square": "h2",
+  "move": "white_pawn_h2_move_Mira.mp3",
+  "capture": "white_pawn_h2_capture_Mira.mp3",
+  "captured": "white_pawn_h2_captured_Mira.mp3"
+ },
+ "black_pawn_a7": {
+  "name": "Nix",
+  "colour": "black",
+  "type": "pawn",
+  "square": "a7",
+  "move": "black_pawn_a7_move_Nix.mp3",
+  "capture": "black_pawn_a7_capture_Nix.mp3",
+  "captured": "black_pawn_a7_captured_Nix.mp3"
+ },
+ "black_pawn_b7": {
+  "name": "Dree",
+  "colour": "black",
+  "type": "pawn",
+  "square": "b7",
+  "move": "black_pawn_b7_move_Dree.mp3",
+  "capture": "black_pawn_b7_capture_Dree.mp3",
+  "captured": "black_pawn_b7_captured_Dree.mp3"
+ },
+ "black_pawn_c7": {
+  "name": "Mott",
+  "colour": "black",
+  "type": "pawn",
+  "square": "c7",
+  "move": "black_pawn_c7_move_Mott.mp3",
+  "capture": "black_pawn_c7_capture_Mott.mp3",
+  "captured": "black_pawn_c7_captured_Mott.mp3"
+ },
+ "black_pawn_d7": {
+  "name": "Kesh",
+  "colour": "black",
+  "type": "pawn",
+  "square": "d7",
+  "move": "black_pawn_d7_move_Kesh.mp3",
+  "capture": "black_pawn_d7_capture_Kesh.mp3",
+  "captured": "black_pawn_d7_captured_Kesh.mp3"
+ },
+ "black_pawn_e7": {
+  "name": "Lyra",
+  "colour": "black",
+  "type": "pawn",
+  "square": "e7",
+  "move": "black_pawn_e7_move_Lyra.mp3",
+  "capture": "black_pawn_e7_capture_Lyra.mp3",
+  "captured": "black_pawn_e7_captured_Lyra.mp3"
+ },
+ "black_pawn_f7": {
+  "name": "Bogle",
+  "colour": "black",
+  "type": "pawn",
+  "square": "f7",
+  "move": "black_pawn_f7_move_Bogle.mp3",
+  "capture": "black_pawn_f7_capture_Bogle.mp3",
+  "captured": "black_pawn_f7_captured_Bogle.mp3"
+ },
+ "black_pawn_g7": {
+  "name": "Tansy",
+  "colour": "black",
+  "type": "pawn",
+  "square": "g7",
+  "move": "black_pawn_g7_move_Tansy.mp3",
+  "capture": "black_pawn_g7_capture_Tansy.mp3",
+  "captured": "black_pawn_g7_captured_Tansy.mp3"
+ },
+ "black_pawn_h7": {
+  "name": "Rook (the pawn)",
+  "colour": "black",
+  "type": "pawn",
+  "square": "h7",
+  "move": "black_pawn_h7_move_Rook-the-pawn.mp3",
+  "capture": "black_pawn_h7_capture_Rook-the-pawn.mp3",
+  "captured": "black_pawn_h7_captured_Rook-the-pawn.mp3"
+ }
+}
