@@ -1,4 +1,5 @@
 import { Eye, EyeOff, RotateCcw } from "lucide-react";
+import { VoiceToggle } from "./VoiceToggle";
 
 /**
  * BoardToolbar — the board control row, rendered as the bottom row of the
@@ -67,6 +68,9 @@ export function BoardToolbar({
         <RotateCcw className="size-3.5" />
         <span>Flip</span>
       </button>
+
+      {/* 3. Piece voices on/off */}
+      <VoiceToggle />
     </div>
   );
 }

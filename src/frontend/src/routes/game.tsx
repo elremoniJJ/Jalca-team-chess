@@ -80,6 +80,7 @@ import {
 import { useMintAttemptsByGame } from "../hooks/use-mint-attempts";
 import { useShieldResolutionSnapshot } from "../hooks/use-shield-resolution-snapshot";
 import { useSoundEffects } from "../hooks/use-sound-effects";
+import { usePieceVoices } from "../hooks/use-piece-voices";
 import { useSpellBoardState } from "../hooks/use-spell-board-state";
 import { useCastVote } from "../hooks/use-voting";
 import { getActor, useActorState } from "../lib/backend-actor";
@@ -703,6 +704,8 @@ function GameRoute() {
   // Sound cues fire on detected state change (new move / capture / check),
   // NOT on every 1.5s poll. The hook gates playback on first user interaction.
   useSoundEffects({ snapshot: gameState, moves, checkSquare });
+  // The named pieces speak their lines (move / capture / captured).
+  usePieceVoices(gameRecord.data);
 
   /* ------------------------------------------------------------------ */
   /* Game mode selector — three-state (Off/Exercise/Drinking) reader      */
