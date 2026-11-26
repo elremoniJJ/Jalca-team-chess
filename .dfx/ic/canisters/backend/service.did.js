@@ -368,6 +368,18 @@ export const idlFactory = ({ IDL }) => {
     'bet' : BetSubmission,
     'timestamp' : Timestamp,
   });
+  const BoardFrame = IDL.Record({
+    'kind' : IDL.Text,
+    'summoned' : IDL.Vec(IDL.Nat),
+    'toSquare' : IDL.Int,
+    'fromSquare' : IDL.Int,
+    'caption' : IDL.Text,
+    'board' : IDL.Text,
+  });
+  const BoardFrameList = IDL.Record({
+    'generation' : IDL.Nat,
+    'frames' : IDL.Vec(BoardFrame),
+  });
   const BurnedSpellCategory = IDL.Variant({
     'Balls' : IDL.Null,
     'Major' : IDL.Null,
@@ -565,6 +577,14 @@ export const idlFactory = ({ IDL }) => {
     'id' : IDL.Nat,
     'bet' : RealBet,
     'timestamp' : Timestamp,
+  });
+  const ResignState = IDL.Record({
+    'resignedTeam' : IDL.Text,
+    'voters' : IDL.Vec(IDL.Text),
+    'whiteNeeded' : IDL.Nat,
+    'blackNeeded' : IDL.Nat,
+    'whiteVotes' : IDL.Nat,
+    'blackVotes' : IDL.Nat,
   });
   const GameResult = IDL.Variant({
     'Draw' : IDL.Null,
@@ -781,6 +801,7 @@ export const idlFactory = ({ IDL }) => {
         [KickResult],
         [],
       ),
+    'castResignVote' : IDL.Func([PseudoPrincipal], [IDL.Text], []),
     'castVote' : IDL.Func(
         [PseudoPrincipal, Vote],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -796,6 +817,7 @@ export const idlFactory = ({ IDL }) => {
     'clearNftMintAttempts' : IDL.Func([], [], []),
     'clearPrizeAllocation' : IDL.Func([Timestamp], [AllocationResult], []),
     'concludeByInsufficientMaterial' : IDL.Func([Timestamp], [], []),
+    'concludeByResignation' : IDL.Func([Team, Timestamp], [], []),
     'concludeBySpellCheck' : IDL.Func([Team, IDL.Text, Timestamp], [], []),
     'createDrinkingAssignment' : IDL.Func(
         [PieceType, Team, IDL.Nat],
@@ -844,6 +866,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getBets' : IDL.Func([], [IDL.Vec(BetRecord)], ['query']),
+    'getBoardFrames' : IDL.Func([], [BoardFrameList], ['query']),
     'getBurnState' : IDL.Func([], [BurnStateSnapshot], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getClaimStatus' : IDL.Func([Timestamp], [ClaimStatus], ['query']),
@@ -902,6 +925,7 @@ export const idlFactory = ({ IDL }) => {
     'getPbppInformation' : IDL.Func([], [IDL.Vec(PbppInformationEntry)], []),
     'getPrizeCanisterBalances' : IDL.Func([], [PrizeBalancesResult], []),
     'getRealBets' : IDL.Func([], [IDL.Vec(RealBetRecord)], ['query']),
+    'getResignState' : IDL.Func([], [ResignState], ['query']),
     'getResults' : IDL.Func([], [IDL.Vec(ResultRecord)], ['query']),
     'getSettlements' : IDL.Func([], [IDL.Vec(SettlementRecord)], ['query']),
     'getShieldResolutionSnapshot' : IDL.Func(
@@ -960,6 +984,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Bool],
         ['query'],
       ),
+    'kickBot' : IDL.Func([PseudoPrincipal], [IDL.Text], []),
     'login' : IDL.Func(
         [PseudoPrincipal, IDL.Text, IDL.Opt(IDL.Text), WalletSource],
         [LoginResult],
@@ -1016,6 +1041,7 @@ export const idlFactory = ({ IDL }) => {
         [KickResult],
         [],
       ),
+    'withdrawResignVote' : IDL.Func([PseudoPrincipal], [IDL.Text], []),
     'writeStory' : IDL.Func([IDL.Text], [], []),
   });
 };

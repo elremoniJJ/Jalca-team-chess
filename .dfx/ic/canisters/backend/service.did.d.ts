@@ -84,6 +84,18 @@ export interface BetSubmission {
   'playerPrincipal' : PseudoPrincipal,
 }
 export interface BlockedSquare { 'owner' : Team, 'square' : bigint }
+export interface BoardFrame {
+  'kind' : string,
+  'summoned' : Array<bigint>,
+  'toSquare' : bigint,
+  'fromSquare' : bigint,
+  'caption' : string,
+  'board' : string,
+}
+export interface BoardFrameList {
+  'generation' : bigint,
+  'frames' : Array<BoardFrame>,
+}
 export interface BurnAndPlayRequest {
   'tokenId' : bigint,
   'kind' : SpellKind,
@@ -475,6 +487,14 @@ export interface ReportOutcomeArgs {
 }
 export type ReportOutcomeResult = { 'ok' : null } |
   { 'err' : EscrowError };
+export interface ResignState {
+  'resignedTeam' : string,
+  'voters' : Array<string>,
+  'whiteNeeded' : bigint,
+  'blackNeeded' : bigint,
+  'whiteVotes' : bigint,
+  'blackVotes' : bigint,
+}
 export interface Result { 'hasMore' : boolean, 'rows' : Array<Array<Cell>> }
 export interface ResultRecord {
   'id' : bigint,
@@ -675,6 +695,7 @@ export interface _SERVICE {
   'burnNft' : ActorMethod<[bigint], BurnOutcome>,
   'burnNfts' : ActorMethod<[Array<bigint>], Array<BurnOutcome>>,
   'castKickVote' : ActorMethod<[PseudoPrincipal, PseudoPrincipal], KickResult>,
+  'castResignVote' : ActorMethod<[PseudoPrincipal], string>,
   'castVote' : ActorMethod<
     [PseudoPrincipal, Vote],
     { 'ok' : null } |
@@ -686,6 +707,7 @@ export interface _SERVICE {
   'clearNftMintAttempts' : ActorMethod<[], undefined>,
   'clearPrizeAllocation' : ActorMethod<[Timestamp], AllocationResult>,
   'concludeByInsufficientMaterial' : ActorMethod<[Timestamp], undefined>,
+  'concludeByResignation' : ActorMethod<[Team, Timestamp], undefined>,
   'concludeBySpellCheck' : ActorMethod<[Team, string, Timestamp], undefined>,
   'createDrinkingAssignment' : ActorMethod<
     [PieceType, Team, bigint],
@@ -720,6 +742,7 @@ export interface _SERVICE {
   'getApprovalState' : ActorMethod<[PseudoPrincipal], ApprovalStateResult>,
   'getArchivedPrizePool' : ActorMethod<[Timestamp], [] | [ArchivedPrizePool]>,
   'getBets' : ActorMethod<[], Array<BetRecord>>,
+  'getBoardFrames' : ActorMethod<[], BoardFrameList>,
   'getBurnState' : ActorMethod<[], BurnStateSnapshot>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getClaimStatus' : ActorMethod<[Timestamp], ClaimStatus>,
@@ -749,6 +772,7 @@ export interface _SERVICE {
   'getPbppInformation' : ActorMethod<[], Array<PbppInformationEntry>>,
   'getPrizeCanisterBalances' : ActorMethod<[], PrizeBalancesResult>,
   'getRealBets' : ActorMethod<[], Array<RealBetRecord>>,
+  'getResignState' : ActorMethod<[], ResignState>,
   'getResults' : ActorMethod<[], Array<ResultRecord>>,
   'getSettlements' : ActorMethod<[], Array<SettlementRecord>>,
   'getShieldResolutionSnapshot' : ActorMethod<[], ShieldResolutionSnapshot>,
@@ -786,6 +810,7 @@ export interface _SERVICE {
     [Array<[bigint, PieceType, Team]>],
     boolean
   >,
+  'kickBot' : ActorMethod<[PseudoPrincipal], string>,
   'login' : ActorMethod<
     [PseudoPrincipal, string, [] | [string], WalletSource],
     LoginResult
@@ -832,6 +857,7 @@ export interface _SERVICE {
     [PseudoPrincipal, PseudoPrincipal],
     KickResult
   >,
+  'withdrawResignVote' : ActorMethod<[PseudoPrincipal], string>,
   'writeStory' : ActorMethod<[string], undefined>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;

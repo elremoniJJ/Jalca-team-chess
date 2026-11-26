@@ -885,6 +885,26 @@ export enum WalletSource {
     none = "none",
     oisy = "oisy"
 }
+export interface BoardFrame {
+    kind: string;
+    caption: string;
+    fromSquare: bigint;
+    toSquare: bigint;
+    board: string;
+    summoned: Array<bigint>;
+}
+export interface BoardFrameList {
+    generation: bigint;
+    frames: Array<BoardFrame>;
+}
+export interface ResignState {
+    whiteVotes: bigint;
+    whiteNeeded: bigint;
+    blackVotes: bigint;
+    blackNeeded: bigint;
+    voters: Array<string>;
+    resignedTeam: string;
+}
 export interface backendInterface {
     adminBackfillCompetition(entry: BackfillEntry, winnerPrincipal: Principal): Promise<void>;
     adminBackfillPrizeAllocation(sunday: Timestamp, poolE8s: bigint): Promise<AllocationResult>;
@@ -923,6 +943,11 @@ export interface backendInterface {
     getAdminPrizeClaims(): Promise<AdminPrizeOverview__1>;
     getAdminPrizeOverview(): Promise<AdminPrizeOverview>;
     getApiDoc(): Promise<string>;
+    kickBot(principal: PseudoPrincipal): Promise<string>;
+    getBoardFrames(): Promise<BoardFrameList>;
+    getResignState(): Promise<ResignState>;
+    castResignVote(principal: PseudoPrincipal): Promise<string>;
+    withdrawResignVote(principal: PseudoPrincipal): Promise<string>;
     getApprovalState(player: PseudoPrincipal): Promise<ApprovalStateResult>;
     getArchivedPrizePool(sunday: Timestamp): Promise<ArchivedPrizePool | null>;
     getBets(): Promise<Array<BetRecord>>;

@@ -850,6 +850,11 @@ export const idlService = IDL.Service({
   'getAdminPrizeClaims' : IDL.Func([], [AdminPrizeOverview__1], []),
   'getAdminPrizeOverview' : IDL.Func([], [AdminPrizeOverview], []),
   'getApiDoc' : IDL.Func([], [IDL.Text], ['query']),
+  'kickBot' : IDL.Func([IDL.Text], [IDL.Text], []),
+  'getBoardFrames' : IDL.Func([], [IDL.Record({ 'generation' : IDL.Nat, 'frames' : IDL.Vec(IDL.Record({ 'kind' : IDL.Text, 'caption' : IDL.Text, 'fromSquare' : IDL.Int, 'toSquare' : IDL.Int, 'board' : IDL.Text, 'summoned' : IDL.Vec(IDL.Nat) })) })], ['query']),
+  'getResignState' : IDL.Func([], [IDL.Record({ 'whiteVotes' : IDL.Nat, 'whiteNeeded' : IDL.Nat, 'blackVotes' : IDL.Nat, 'blackNeeded' : IDL.Nat, 'voters' : IDL.Vec(IDL.Text), 'resignedTeam' : IDL.Text })], ['query']),
+  'castResignVote' : IDL.Func([IDL.Text], [IDL.Text], []),
+  'withdrawResignVote' : IDL.Func([IDL.Text], [IDL.Text], []),
   'getApprovalState' : IDL.Func(
       [PseudoPrincipal],
       [ApprovalStateResult],
@@ -1870,6 +1875,11 @@ export const idlFactory = ({ IDL }) => {
     'getAdminPrizeClaims' : IDL.Func([], [AdminPrizeOverview__1], []),
     'getAdminPrizeOverview' : IDL.Func([], [AdminPrizeOverview], []),
     'getApiDoc' : IDL.Func([], [IDL.Text], ['query']),
+    'kickBot' : IDL.Func([IDL.Text], [IDL.Text], []),
+    'getBoardFrames' : IDL.Func([], [IDL.Record({ 'generation' : IDL.Nat, 'frames' : IDL.Vec(IDL.Record({ 'kind' : IDL.Text, 'caption' : IDL.Text, 'fromSquare' : IDL.Int, 'toSquare' : IDL.Int, 'board' : IDL.Text, 'summoned' : IDL.Vec(IDL.Nat) })) })], ['query']),
+    'getResignState' : IDL.Func([], [IDL.Record({ 'whiteVotes' : IDL.Nat, 'whiteNeeded' : IDL.Nat, 'blackVotes' : IDL.Nat, 'blackNeeded' : IDL.Nat, 'voters' : IDL.Vec(IDL.Text), 'resignedTeam' : IDL.Text })], ['query']),
+    'castResignVote' : IDL.Func([IDL.Text], [IDL.Text], []),
+    'withdrawResignVote' : IDL.Func([IDL.Text], [IDL.Text], []),
     'getApprovalState' : IDL.Func(
         [PseudoPrincipal],
         [ApprovalStateResult],

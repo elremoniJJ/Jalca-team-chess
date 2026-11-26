@@ -128,6 +128,8 @@ export interface EndGameModalProps {
    * result / game record.
    */
   spellWinName?: string;
+  /** Display-only: "White" or "Black" when that team resigned. */
+  resignedTeam?: string;
 }
 
 /* ------------------------------------------------------------------ */
@@ -397,6 +399,7 @@ export function EndGameModal({
   onRequestNewGame,
   onLogout,
   spellWinName,
+  resignedTeam,
 }: EndGameModalProps) {
   // "New game" in-flight + inline error state. The handler returns an
   // error string on failure (or undefined on success); we surface it inline
@@ -481,6 +484,7 @@ export function EndGameModal({
               currentWalletAddress={currentWalletAddress}
               mintAttemptGroups={mintAttemptGroups}
               spellWinName={spellWinName}
+              resignedTeam={resignedTeam}
             />
           ) : record ? (
             <LoadingState />
@@ -603,12 +607,14 @@ function RecordBody({
   currentWalletAddress,
   mintAttemptGroups,
   spellWinName,
+  resignedTeam,
 }: {
   record: GameRecord;
   gameNumber: bigint | null;
   currentWalletAddress: string;
   mintAttemptGroups?: MintAttemptGroup[];
   spellWinName?: string;
+  resignedTeam?: string;
 }) {
   // currentWalletAddress was previously consumed by the single-viewer
   // NftMintLine component. The prop is retained in EndGameModalProps for
@@ -671,7 +677,9 @@ function RecordBody({
   const finalMoveLabel =
     resolvedSpellWinName !== ""
       ? "King captured by spell"
-      : endStateLabel(record.endState);
+      : (resignedTeam ?? "").trim() !== ""
+        ? `${resignedTeam} resigned`
+        : endStateLabel(record.endState);
 
   return (
     <div className="flex flex-col gap-5">

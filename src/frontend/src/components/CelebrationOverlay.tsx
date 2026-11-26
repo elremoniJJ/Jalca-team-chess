@@ -24,6 +24,11 @@ interface CelebrationOverlayProps {
    * presentation flag carried from the burn-and-play result.
    */
   spellWinName?: string;
+  /**
+   * Display-only: "White" or "Black" when that team resigned. The game is
+   * still recorded and reported as an ordinary win for the other team.
+   */
+  resignedTeam?: string;
 }
 
 const CONFETTI_COUNT = 24;
@@ -73,6 +78,7 @@ export function CelebrationOverlay({
   secondsLeft,
   endState,
   spellWinName,
+  resignedTeam,
 }: CelebrationOverlayProps) {
   const isCelebration = phase === GamePhaseEnum.Celebration;
   const isDraw = phase === GamePhaseEnum.Draw;
@@ -99,9 +105,12 @@ export function CelebrationOverlay({
   // spell so players know what happened. Otherwise keep the existing
   // checkmate sentence exactly.
   const hasSpellWin = spellWinName !== undefined && spellWinName.trim() !== "";
+  const hasResign = resignedTeam !== undefined && resignedTeam.trim() !== "";
   const winReason = hasSpellWin
     ? `King captured from Spell-check: ${spellWinName}`
-    : "Checkmate — well played.";
+    : hasResign
+      ? `${resignedTeam} resigned \u2014 ${winnerName} won by resignation.`
+      : "Checkmate — well played.";
 
   return (
     <output

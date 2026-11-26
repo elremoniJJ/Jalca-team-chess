@@ -5,6 +5,8 @@ import ChessGameTypes "../types/chess-game";
 import RecorderTypes "../types/game-recorder";
 import Types "../types/shield-and-spell-resolution";
 import ShieldResolution "../lib/shield-and-spell-resolution";
+import FrameTypes "../types/board-frames";
+import BoardFrames "../lib/board-frames";
 
 mixin (
   shieldResolutionStore : Types.ShieldResolutionStore,
@@ -14,6 +16,7 @@ mixin (
   recorder : RecorderTypes.RecorderStore,
   concludeBySpellCheck : (ChessGameTypes.Team, Text, ChessGameTypes.Timestamp) -> async (),
   concludeByInsufficientMaterial : (ChessGameTypes.Timestamp) -> async (),
+  boardFrames : FrameTypes.FrameStore,
 ) {
   // Burn-in-progress guard: true while a burnAndPlay is mid-flight (between
   // the guard set and its clear). Prevents a second concurrent burnAndPlay
@@ -56,6 +59,7 @@ mixin (
       );
       switch (result) {
         case (#ok({ burn })) {
+          BoardFrames.addSpell(boardFrames, gameState.board, BoardFrames.teamName(burn.team), burn.spellName, switch (burn.resolution) { case (?x) x.firesOnBoard; case null true });
           switch (burn.spellCheckWin) {
             case (?winner) {
               await concludeBySpellCheck(winner, burn.spellName, Time.now());

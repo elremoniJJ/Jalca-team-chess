@@ -48,6 +48,10 @@ import BurnApi "mixins/burn-api";
 import Spells "lib/spells";
 import KickTypes "types/kick";
 import KickApi "mixins/kick-api";
+import BoardFrameTypes "types/board-frames";
+import BoardFrames "lib/board-frames";
+import BoardFramesApi "mixins/board-frames-api";
+import ResignApi "mixins/resign-api";
 import ApprovalTypes "types/approval";
 import ApprovalApi "mixins/approval-api";
 import ShieldResolutionTypes "types/shield-and-spell-resolution";
@@ -317,6 +321,10 @@ actor {
   transient var wakeHook : () -> async () = func() : async () {};
   transient var clockTimerId : ?Timer.TimerId = null;
 
+  // Saved board positions of the current game (for the replay buttons).
+  // Runtime-only: an upgrade in the middle of a game starts the history again.
+  transient let boardFrames : BoardFrameTypes.FrameStore = BoardFrames.newStore();
+
   // Chess game public API. Receives the exercise and drinking stores so the
   // move path can make the single isolated create call on capture for each
   // domain (compute + append via the respective lib). Receives the nftStore
@@ -325,7 +333,7 @@ actor {
   // move-completion path can reset the per-turn burn flags when the turn
   // advances. No other exercise, drinking, NFT, or burn coupling exists in
   // the chess mixin.
-  include ChessGameApi(gameState, players, recorder, exerciseStore, drinkingStore, nftStore, voteStore, voteSnapshotStore, burnStore, kickStore, shieldResolutionStore, guaranteedStore, rosterBindings, winnerStore, compWinStore, compArchiveStore, compFinalizeMarker, compArchive10Store, compFinalize10Marker, prizeAllocationStore, prizeClaimStore, func() : async () { await wakeHook() });
+  include ChessGameApi(gameState, players, recorder, exerciseStore, drinkingStore, nftStore, voteStore, voteSnapshotStore, burnStore, kickStore, shieldResolutionStore, guaranteedStore, rosterBindings, winnerStore, compWinStore, compArchiveStore, compFinalizeMarker, compArchive10Store, compFinalize10Marker, prizeAllocationStore, prizeClaimStore, func() : async () { await wakeHook() }, boardFrames);
 
   // Install the recurring maintenance timer on the install path. In Motoko,
   // top-level actor-body initialization expressions run once on install; on
@@ -508,7 +516,18 @@ actor {
   ) : async () {
     await concludeByInsufficientMaterial(now);
   };
-  include ShieldResolutionApi(shieldResolutionStore, burnStore, gameState, players, recorder, concludeBySpellCheckLocal, concludeByInsufficientMaterialLocal);
+  include ShieldResolutionApi(shieldResolutionStore, burnStore, gameState, players, recorder, concludeBySpellCheckLocal, concludeByInsufficientMaterialLocal, boardFrames);
+
+  // Replay history and resignation. `concludeByResignation` is brought into
+  // scope by the ChessGameApi include; wrap it locally like the two above.
+  func concludeByResignationLocal(
+    winner : Types.Team,
+    now : Types.Timestamp,
+  ) : async () {
+    await concludeByResignation(winner, now);
+  };
+  include BoardFramesApi(boardFrames);
+  include ResignApi(boardFrames, players, gameState, concludeByResignationLocal);
 
   // Story public API — claim the sole Story authorship (keyed on the real
   // caller Internet Identity principal), read the recorded author, and write

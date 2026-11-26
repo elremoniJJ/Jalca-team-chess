@@ -248,6 +248,15 @@ type Result =
    hasMore: bool;
    rows: vec vec Cell;
  };
+type ResignState = 
+ record {
+   blackNeeded: nat;
+   blackVotes: nat;
+   resignedTeam: text;
+   voters: vec text;
+   whiteNeeded: nat;
+   whiteVotes: nat;
+ };
 type ReportOutcomeResult = 
  variant {
    err: EscrowError;
@@ -786,6 +795,20 @@ type BurnAndPlayRequest =
    spellName: text;
    tokenId: nat;
  };
+type BoardFrameList = 
+ record {
+   frames: vec BoardFrame;
+   generation: nat;
+ };
+type BoardFrame = 
+ record {
+   board: text;
+   caption: text;
+   fromSquare: int;
+   kind: text;
+   summoned: vec nat;
+   toSquare: int;
+ };
 type BlockedSquare = 
  record {
    owner: Team;
@@ -915,6 +938,7 @@ service : {
   burnNfts: (tokenIds: vec nat) -> (vec BurnOutcome);
   castKickVote: ("principal": PseudoPrincipal, target: PseudoPrincipal) ->
    (KickResult);
+  castResignVote: ("principal": PseudoPrincipal) -> (text);
   castVote: ("principal": PseudoPrincipal, vote: Vote) ->
    (variant {
       err: text;
@@ -927,6 +951,7 @@ service : {
   clearNftMintAttempts: () -> ();
   clearPrizeAllocation: (sunday: Timestamp) -> (AllocationResult);
   concludeByInsufficientMaterial: (now: Timestamp) -> ();
+  concludeByResignation: (winner: Team, now: Timestamp) -> ();
   concludeBySpellCheck: (winner: Team, spellName: text, now: Timestamp) -> ();
   createDrinkingAssignment: (capturedPiece: PieceType, lostTeam: Team,
    moveIndex: nat) -> (DrinkingAssignment);
@@ -947,6 +972,7 @@ service : {
   getApprovalState: (player: PseudoPrincipal) -> (ApprovalStateResult) query;
   getArchivedPrizePool: (sunday: Timestamp) -> (opt ArchivedPrizePool) query;
   getBets: () -> (vec BetRecord) query;
+  getBoardFrames: () -> (BoardFrameList) query;
   getBurnState: () -> (BurnStateSnapshot) query;
   getCallerUserRole: () -> (UserRole) query;
   getClaimStatus: (sunday: Timestamp) -> (ClaimStatus) query;
@@ -973,6 +999,7 @@ service : {
   getPbppInformation: () -> (vec PbppInformationEntry);
   getPrizeCanisterBalances: () -> (PrizeBalancesResult);
   getRealBets: () -> (vec RealBetRecord) query;
+  getResignState: () -> (ResignState) query;
   getResults: () -> (vec ResultRecord) query;
   getSettlements: () -> (vec SettlementRecord) query;
   getShieldResolutionSnapshot: () -> (ShieldResolutionSnapshot) query;
@@ -1007,6 +1034,7 @@ service : {
          PieceType;
          Team;
        }) -> (bool) query;
+  kickBot: ("principal": PseudoPrincipal) -> (text);
   login: ("principal": PseudoPrincipal, username: text, walletAddress:
    opt text, walletSource: WalletSource) -> (LoginResult);
   loginRanked: (rosterKey: text, username: text, walletAddress: opt text,
@@ -1042,5 +1070,6 @@ service : {
    opt text, walletSource: WalletSource) -> ();
   withdrawKickVote: ("principal": PseudoPrincipal, target:
    PseudoPrincipal) -> (KickResult);
+  withdrawResignVote: ("principal": PseudoPrincipal) -> (text);
   writeStory: ("text": text) -> ();
 }

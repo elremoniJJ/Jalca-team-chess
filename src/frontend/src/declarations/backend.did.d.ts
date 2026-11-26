@@ -656,6 +656,26 @@ export interface WinnerRankingRow {
   'rank' : bigint,
   'wins' : bigint,
 }
+export interface BoardFrame {
+  'kind' : string,
+  'caption' : string,
+  'fromSquare' : bigint,
+  'toSquare' : bigint,
+  'board' : string,
+  'summoned' : Array<bigint>,
+}
+export interface BoardFrameList {
+  'generation' : bigint,
+  'frames' : Array<BoardFrame>,
+}
+export interface ResignState {
+  'whiteVotes' : bigint,
+  'whiteNeeded' : bigint,
+  'blackVotes' : bigint,
+  'blackNeeded' : bigint,
+  'voters' : Array<string>,
+  'resignedTeam' : string,
+}
 export interface _SERVICE {
   '_initialize_access_control' : ActorMethod<[], undefined>,
   '_internet_identity_sign_in_finish' : ActorMethod<[], Result__1>,
@@ -725,6 +745,11 @@ export interface _SERVICE {
   'getAdminPrizeClaims' : ActorMethod<[], AdminPrizeOverview__1>,
   'getAdminPrizeOverview' : ActorMethod<[], AdminPrizeOverview>,
   'getApiDoc' : ActorMethod<[], string>,
+  'kickBot' : ActorMethod<[string], string>,
+  'getBoardFrames' : ActorMethod<[], BoardFrameList>,
+  'getResignState' : ActorMethod<[], ResignState>,
+  'castResignVote' : ActorMethod<[string], string>,
+  'withdrawResignVote' : ActorMethod<[string], string>,
   'getApprovalState' : ActorMethod<[PseudoPrincipal], ApprovalStateResult>,
   'getArchivedPrizePool' : ActorMethod<[Timestamp], [] | [ArchivedPrizePool]>,
   'getBets' : ActorMethod<[], Array<BetRecord>>,

@@ -931,6 +931,26 @@ export enum WalletSource {
     none = "none",
     oisy = "oisy"
 }
+export interface BoardFrame {
+    kind: string;
+    caption: string;
+    fromSquare: bigint;
+    toSquare: bigint;
+    board: string;
+    summoned: Array<bigint>;
+}
+export interface BoardFrameList {
+    generation: bigint;
+    frames: Array<BoardFrame>;
+}
+export interface ResignState {
+    whiteVotes: bigint;
+    whiteNeeded: bigint;
+    blackVotes: bigint;
+    blackNeeded: bigint;
+    voters: Array<string>;
+    resignedTeam: string;
+}
 export interface backendInterface {
     _initialize_access_control(): Promise<void>;
     _internet_identity_sign_in_finish(): Promise<Result__1>;
@@ -972,6 +992,11 @@ export interface backendInterface {
     getAdminPrizeClaims(): Promise<AdminPrizeOverview__1>;
     getAdminPrizeOverview(): Promise<AdminPrizeOverview>;
     getApiDoc(): Promise<string>;
+    kickBot(principal: PseudoPrincipal): Promise<string>;
+    getBoardFrames(): Promise<BoardFrameList>;
+    getResignState(): Promise<ResignState>;
+    castResignVote(principal: PseudoPrincipal): Promise<string>;
+    withdrawResignVote(principal: PseudoPrincipal): Promise<string>;
     getApprovalState(player: PseudoPrincipal): Promise<ApprovalStateResult>;
     getArchivedPrizePool(sunday: Timestamp): Promise<ArchivedPrizePool | null>;
     getBets(): Promise<Array<BetRecord>>;
@@ -1545,6 +1570,76 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getApiDoc();
+            return result;
+        }
+    }
+    async kickBot(arg0: PseudoPrincipal): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.kickBot(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.kickBot(arg0);
+            return result;
+        }
+    }
+    async getBoardFrames(): Promise<BoardFrameList> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getBoardFrames();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getBoardFrames();
+            return result;
+        }
+    }
+    async getResignState(): Promise<ResignState> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getResignState();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getResignState();
+            return result;
+        }
+    }
+    async castResignVote(arg0: PseudoPrincipal): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.castResignVote(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.castResignVote(arg0);
+            return result;
+        }
+    }
+    async withdrawResignVote(arg0: PseudoPrincipal): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.withdrawResignVote(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.withdrawResignVote(arg0);
             return result;
         }
     }

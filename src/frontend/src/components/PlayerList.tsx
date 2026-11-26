@@ -74,6 +74,12 @@ function InfoContent() {
           A player can choose to kick a player off their team. The kick succeeds
           only when more than 50% of the entire team agrees.
         </p>
+        <p className="text-sm leading-relaxed text-foreground">
+          Jalca, the computer player, can be kicked by any player on either
+          team, and one press is enough. He leaves for the rest of that game
+          and joins again in the next one. He cannot be kicked when he is the
+          only player on his team.
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">

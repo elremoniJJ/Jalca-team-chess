@@ -132,6 +132,12 @@ module {
     };
   };
 
+  // The spell Jalca casts when he is bored: a queen, if she can be placed.
+  public func boredSpell(board : [?Types.Piece], team : Types.Team) : ?BotSpell {
+    if (not hasEffect(board, team, "Anne Boleyn")) { return null };
+    ?{ name = "Anne Boleyn"; kind = #Minor; necromancy = false; level = 4 };
+  };
+
   // The spell's power: 2 to 6.
   public func powerFor(r : Nat) : Nat {
     2 + ((r / 100_000) % 5);

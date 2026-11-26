@@ -16,6 +16,8 @@ import Types "../types/chess-game";
 import ChessGame "../lib/chess-game";
 import SpellState "../lib/spell-state";
 import RecorderTypes "../types/game-recorder";
+import FrameTypes "../types/board-frames";
+import BoardFrames "../lib/board-frames";
 import GameRecorder "../lib/game-recorder";
 import ExerciseTypes "../types/exercise";
 import Exercise "../lib/exercise";
@@ -61,6 +63,7 @@ mixin (
   prizeAllocationStore : PrizeTypes.PrizeAllocationStore,
   prizeClaimStore : PrizeClaimTypes.PrizeClaimStore,
   wakeClock : () -> async (),
+  boardFrames : FrameTypes.FrameStore,
 ) {
   // Re-entry guard: true while a startNewGame is mid-flight (between the
   // caller's gate check and startNewGame's commit). Prevents a second
@@ -71,6 +74,11 @@ mixin (
   // actually in-flight, so the flag must re-initialize to false rather than
   // persist a stale true.
   transient var newGameStarting : Bool = false;
+
+  // True after Jalca has been kicked out of the current game. While a game is
+  // in progress ensureBot leaves him out; the flag is cleared when the next
+  // game starts, so he rejoins every new game.
+  transient var botKickedThisGame : Bool = false;
 
   // Move-in-progress guard: true while an attemptMove is mid-flight (between
   // the guard set and its clear). Prevents a second concurrent attemptMove
@@ -322,6 +330,8 @@ mixin (
   // makes an already-existing bot record (previously stored with username
   // "jalca-bot") self-heal to "Jalca" the next time it refreshes.
   func ensureBot(now : Types.Timestamp) : async () {
+    // Kicked out of the game in progress: he stays out until the next game.
+    if (botKickedThisGame and gameState.gamePhase == #Playing) { return };
     switch (findPlayer(botRosterKey())) {
       case (?existing) {
         // Already present — never create a duplicate. Keep the bot fresh and
@@ -600,6 +610,10 @@ mixin (
       // Clear the guaranteed set at the start of each new game, alongside the
       // vote clearing, so guaranteed entries apply to exactly one game.
       Guaranteed.clearAll(guaranteedStore);
+      // Fresh history of board positions for the replay buttons.
+      botKickedThisGame := false;
+      BoardFrames.reset(boardFrames);
+      BoardFrames.addStart(boardFrames, gameState.board, gameState.openingName);
       gameState.gamePhase := #Playing;
       // Signal JEL that a new game has started so it opens fresh next-game
       // pots and commences its 2-hour auto-refund timer (which pays out the
@@ -851,6 +865,57 @@ mixin (
   public func concludeByInsufficientMaterial(now : Types.Timestamp) : async () {
     if (gameState.gamePhase != #Playing) return;
     await triggerDraw(now, #InsufficientMaterial);
+  };
+
+  // Kick Jalca. Any logged-in human, on either team, may do it, and ONE vote is
+  // enough: he leaves the game at once and comes back in the next game. Not
+  // allowed when he is the only player on his team (that team would be empty).
+  // Returns "ok" or a short error message.
+  public func kickBot(principal : Types.PseudoPrincipal) : async Text {
+    switch (findPlayer(principal)) {
+      case null { return "Not a logged-in player" };
+      case (?caller) {
+        if (caller.isBot) { return "Not allowed" };
+      };
+    };
+    if (gameState.gamePhase != #Playing) {
+      return "Jalca can only be kicked while a game is in progress";
+    };
+    var botIndex : ?Nat = null;
+    var i = 0;
+    for (p in players.items.values()) {
+      if (p.isBot) { botIndex := ?i };
+      i += 1;
+    };
+    switch (botIndex) {
+      case null { return "Jalca is not in this game" };
+      case (?idx) {
+        let botTeam = players.items[idx].team;
+        let wasMoveMaker = players.items[idx].isMoveMaker;
+        let humansOnHisTeam = switch (botTeam) {
+          case (#White) humanWhiteCount();
+          case (#Black) humanBlackCount();
+        };
+        if (humansOnHisTeam < 1) {
+          return "Jalca is the only player on his team, so he cannot be kicked";
+        };
+        botKickedThisGame := true;
+        removePlayerAt(idx);
+        if (wasMoveMaker) { await assignMoveMakerForTeam(botTeam) };
+        Debug.print("[bot] kicked out of the game");
+        "ok";
+      };
+    };
+  };
+
+  // Conclude the game as a win for `winner` because the other team resigned.
+  // Uses the normal win path (triggerCelebration), so the stored end state, the
+  // escrow report, ranked wins and NFTs are exactly those of a checkmate win.
+  // "Resigned" is only a display marker (see the resign mixin). No-op unless
+  // the game is still #Playing.
+  public func concludeByResignation(winner : Types.Team, now : Types.Timestamp) : async () {
+    if (gameState.gamePhase != #Playing) return;
+    await triggerCelebration(winner, now);
   };
 
   // Trigger a draw: set Draw phase and a 10-second window. `reason` is the
@@ -1245,17 +1310,21 @@ mixin (
       if (gameState.spellUseEnabled and botTurns >= 2 and not burnStore.state.burnOccurredThisTurn) {
         let spellMine = ChessGame.materialOf(gameState.board, spellTeam);
         let spellTheirs = ChessGame.materialOf(gameState.board, ChessGame.opponent(spellTeam));
+        // Bored? After 35 moves each he only wants queens.
+        let bored = recorder.moves.size() >= ChessGame.botBoredomPlies;
         let levels : ?(Nat, Nat) =
-          if (spellMine == spellTheirs) { ?(1, 2) }
+          if (bored) { ?(4, 4) }
+          else if (spellMine == spellTheirs) { ?(1, 2) }
           else if (spellMine < spellTheirs) { if (spellMine <= 18) { ?(4, 5) } else { ?(3, 4) } }
           else if (spellMine - spellTheirs <= 5) { ?(1, 1) }
           else { null };
         switch (levels) {
           case (?(lo, hi)) {
-            switch (BotSpells.pickSpell(gameState.board, spellTeam, lo, hi, rSpell)) {
+            switch (if (bored) { BotSpells.boredSpell(gameState.board, spellTeam) } else { BotSpells.pickSpell(gameState.board, spellTeam, lo, hi, rSpell) }) {
               case (?sp) {
                 let power = BotSpells.powerFor(rSpell);
                 let cast = ShieldResolution.botCast(shieldResolutionStore, burnStore, gameState, spellTeam, sp.name, sp.kind, power);
+                BoardFrames.addSpell(boardFrames, gameState.board, "Jalca (" # BoardFrames.teamName(spellTeam) # ")", sp.name, switch (cast.resolution) { case (?x) x.firesOnBoard; case null true });
                 Debug.print("[bot] cast " # sp.name # " (level " # Nat.toText(sp.level) # ", power " # Nat.toText(power) # "), fired=" # debug_show (switch (cast.resolution) { case (?x) x.firesOnBoard; case null false }));
                 switch (cast.spellCheckWin) {
                   case (?winner) {
@@ -2150,6 +2219,7 @@ mixin (
     let preMoveBoard = gameState.board;
     let newBoard = ChessGame.applyMove(preMoveBoard, move);
     gameState.board := newBoard;
+    BoardFrames.addMove(boardFrames, newBoard, team, move.fromSquare, move.toSquare);
 
     // The moving piece (from the pre-move board).
     let movingPiece = switch (preMoveBoard[move.fromSquare]) {

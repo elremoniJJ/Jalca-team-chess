@@ -1148,6 +1148,12 @@ module {
 
   public let botSafetyPlies : Nat = 12;
 
+  // Jalca gets bored once each team has made 35 moves (70 half-moves on the
+  // record).
+  // From then on he summons a queen (Anne Boleyn) every turn, whatever the
+  // material, as long as spells are on for the game.
+  public let botBoredomPlies : Nat = 70;
+
   public type BotStyle = { #Random; #Aggressive; #Ranked };
 
   func moveGivesMate(board : [?Piece], move : Move, team : Team, blocked : [Nat]) : Bool {

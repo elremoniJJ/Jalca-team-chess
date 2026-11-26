@@ -169,7 +169,9 @@ module {
   // addresses). Players who left the lobby (logout / tab close) before
   // conclusion are already removed from `players` by cleanupStalePlayers, but
   // this gate additionally excludes any player whose heartbeat is stale at
-  // the exact conclusion moment.
+  // the exact conclusion moment. The bot (Jalca) never sends a heartbeat, so
+  // he always counts as present: he is listed in the roster but is filtered
+  // out later, wherever NFTs or wins are handed out.
   public func concludeGame(
     store : RecorderStore,
     players : [Player],
@@ -182,14 +184,14 @@ module {
     board : [?ChessTypes.Piece],
   ) {
     let present = players.filter(
-      func(p : Player) : Bool = now - p.lastPing <= staleCutoffNs,
+      func(p : Player) : Bool = p.isBot or now - p.lastPing <= staleCutoffNs,
     );
     // The complement of the presence gate: players present in the live list
     // but with a stale heartbeat at the exact conclusion moment. Snapshotted
     // so the NFT mint path can record a distinct stale-heartbeat skip for
     // each of them (they never reach the mint loop otherwise).
     let stale = players.filter(
-      func(p : Player) : Bool = now - p.lastPing > staleCutoffNs,
+      func(p : Player) : Bool = not p.isBot and now - p.lastPing > staleCutoffNs,
     );
     store.playerList := snapshotPlayerList(present);
     store.rosters := snapshotRosters(present);

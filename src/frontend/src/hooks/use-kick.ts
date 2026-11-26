@@ -111,3 +111,21 @@ export function useWithdrawKickVote() {
     },
   });
 }
+
+/**
+ * useKickBot - kick Jalca out of the game in progress. Any logged-in player,
+ * on either team, may do it and one press is enough: he leaves at once and
+ * comes back in the next game. The backend answers "ok" or an error message
+ * (for example when he is the only player on his team); an error is thrown so
+ * the caller can show it with `toast.error`.
+ */
+export function useKickBot() {
+  return useMutation({
+    mutationFn: async ({ principal }: { principal: string }) => {
+      const actor = await getActor();
+      const result = await actor.kickBot(principal);
+      if (result !== "ok") throw new Error(result);
+      return result;
+    },
+  });
+}

@@ -35,6 +35,8 @@ import { Layout } from "../components/Layout";
 import { LeaderboardWindow } from "../components/LeaderboardWindow";
 import { MoveHistory } from "../components/MoveHistory";
 import { PlayerList } from "../components/PlayerList";
+import { ReplayControls } from "../components/ReplayControls";
+import { ResignButton } from "../components/ResignButton";
 import {
   PredictionBetInfoContent,
   PredictionBetWindow,
@@ -50,7 +52,14 @@ import {
 } from "../components/WalletConnectionWindow";
 import { useDrinkingAssignments } from "../hooks/use-drinking-assignments";
 import { useExerciseAssignments } from "../hooks/use-exercise-assignments";
+import { useBoardFrames } from "../hooks/use-board-frames";
 import { useGameMeta } from "../hooks/use-game-meta";
+import {
+  useCastResignVote,
+  useResignState,
+  useWithdrawResignVote,
+} from "../hooks/use-resign";
+import { decodeFrameBoard } from "../lib/board-frames-logic";
 import { type GameMode, useGameMode } from "../hooks/use-game-mode";
 import { useGameRecord } from "../hooks/use-game-record";
 import { useGameState } from "../hooks/use-game-state";
@@ -69,6 +78,7 @@ import {
 import { useHeartbeat } from "../hooks/use-heartbeat";
 import {
   useCastKickVote,
+  useKickBot,
   useKickState,
   useWithdrawKickVote,
 } from "../hooks/use-kick";
@@ -1217,6 +1227,33 @@ function GameRoute() {
   const { kickState } = useKickState();
   const castKickVote = useCastKickVote();
   const withdrawKickVote = useWithdrawKickVote();
+  const kickBot = useKickBot();
+
+  // ---- Replay (back / forward buttons) and resignation ----
+  // The saved board positions are fetched again whenever the game poll shows a
+  // new move, a new spell, or a phase change.
+  const burnForKey = shieldSnapshot?.lastBurnAndPlay;
+  const boardFramesKey = `${phase}|${moves.length}|${turn}|${burnForKey?.spellName ?? ""}|${String(burnForKey?.tokenId ?? "")}|${String(burnForKey?.gameNumber ?? "")}`;
+  const boardFrames = useBoardFrames(
+    phase === GamePhaseEnum.Playing ||
+      phase === GamePhaseEnum.Celebration ||
+      phase === GamePhaseEnum.Draw,
+    boardFramesKey,
+  );
+  const replayFrames = boardFrames?.frames ?? [];
+  const replayGeneration = boardFrames?.generation;
+  // null = watching the live game; a number = viewing that saved step.
+  const [replayIndex, setReplayIndex] = useState<number | null>(null);
+  // A new game always returns to the live board.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset on a new game only
+  useEffect(() => {
+    setReplayIndex(null);
+  }, [replayGeneration]);
+  const resignState = useResignState(
+    phase === GamePhaseEnum.Playing || phase === GamePhaseEnum.Celebration,
+  );
+  const castResignVote = useCastResignVote();
+  const withdrawResignVote = useWithdrawResignVote();
 
   // Surface a rejected kick vote. The use-kick mutations throw an Error
   // carrying the backend `#err` text (for example "not on the same team"),
@@ -1712,6 +1749,15 @@ function GameRoute() {
       ? optimisticBoard
       : polledBoardArr;
 
+  // Replay: while a saved step is being viewed, the board shows that position
+  // and is read-only. null means the live game.
+  const replayFrame =
+    replayIndex !== null ? replayFrames[replayIndex] : undefined;
+  const replaying = replayFrame !== undefined;
+  const viewBoard = replayFrame
+    ? decodeFrameBoard(replayFrame.board, replayFrame.summoned)
+    : board;
+
   // New-game-starting guard (Fix D + Fix 4). True only when ALL THREE
   // base conditions hold in the SAME snapshot:
   //   (a) phase === Playing,
@@ -2011,13 +2057,13 @@ function GameRoute() {
                 ) : (
                   <div className="relative">
                     <Chessboard
-                      board={board}
+                      board={viewBoard}
                       turn={turn}
                       moveMaker={moveMaker}
                       currentPlayer={currentPlayer}
                       onMove={handleMove}
                       orientation={orientation}
-                      lastMove={lastMove}
+                      lastMove={replaying ? null : lastMove}
                       selectedSquareProp={selection.selectedSquare}
                       onSelectSquare={(sq) =>
                         setSelection(principal, { selectedSquare: sq })
@@ -2034,14 +2080,16 @@ function GameRoute() {
                           pendingPromotionPiece: piece,
                         })
                       }
-                      checkSquare={checkSquare}
+                      checkSquare={replaying ? null : checkSquare}
                       showCoordinates={showCoordinates}
                       manualFlip={manualFlip}
-                      animation={animation}
+                      animation={replaying ? null : animation}
                       openingName={gameState?.openingName}
-                      spellContext={spellContext}
-                      lastBurnAndPlay={shieldSnapshot?.lastBurnAndPlay ?? null}
-                      movePending={movePending}
+                      spellContext={replaying ? undefined : spellContext}
+                      lastBurnAndPlay={
+                        replaying ? null : (shieldSnapshot?.lastBurnAndPlay ?? null)
+                      }
+                      movePending={movePending || replaying}
                     />
 
                     {/* Board view overlay — covers ONLY the board squares
@@ -2154,6 +2202,57 @@ function GameRoute() {
                 )}
               </div>
 
+              {/* Replay buttons (back to start, back, forward, live) centred
+               * under the board, with the resign button below them. */}
+              {replayFrames.length > 0 && (
+                <ReplayControls
+                  frames={replayFrames}
+                  index={replayIndex}
+                  onChange={setReplayIndex}
+                />
+              )}
+              {phase === GamePhaseEnum.Playing &&
+                !isSpectator &&
+                currentPlayer && (
+                  <div className="flex justify-center pb-2 pt-2">
+                    <ResignButton
+                      state={resignState}
+                      team={currentPlayer.team}
+                      principal={currentPlayer.principal}
+                      pending={
+                        castResignVote.isPending ||
+                        withdrawResignVote.isPending
+                      }
+                      onVote={() =>
+                        castResignVote.mutate(
+                          { principal: currentPlayer.principal },
+                          {
+                            onError: (e) =>
+                              toast.error(
+                                e instanceof Error
+                                  ? e.message
+                                  : "Could not resign",
+                              ),
+                          },
+                        )
+                      }
+                      onWithdraw={() =>
+                        withdrawResignVote.mutate(
+                          { principal: currentPlayer.principal },
+                          {
+                            onError: (e) =>
+                              toast.error(
+                                e instanceof Error
+                                  ? e.message
+                                  : "Could not take the vote back",
+                              ),
+                          },
+                        )
+                      }
+                    />
+                  </div>
+                )}
+
               {showOverlay && (
                 <CelebrationOverlay
                   phase={phase}
@@ -2161,6 +2260,7 @@ function GameRoute() {
                   secondsLeft={celebrationSecondsLeft}
                   endState={gameRecord.data?.endState}
                   spellWinName={spellWinName}
+                  resignedTeam={resignState?.resignedTeam}
                 />
               )}
 
@@ -2188,6 +2288,7 @@ function GameRoute() {
                   onRequestNewGame={handleRequestNewGame}
                   onLogout={handleModalLogout}
                   spellWinName={spellWinName}
+                  resignedTeam={resignState?.resignedTeam}
                 />
               )}
 
@@ -2226,9 +2327,25 @@ function GameRoute() {
                     kickState={kickState}
                     currentUsername={currentPlayer?.username}
                     spectator={isSpectator}
-                    onCastKickVote={(target) =>
-                      castKickVote.mutate({ principal, target })
-                    }
+                    onCastKickVote={(target) => {
+                      // Jalca (the computer player) can be kicked by anyone,
+                      // on either team, with a single press.
+                      if (players.find((p) => p.principal === target)?.isBot) {
+                        kickBot.mutate(
+                          { principal },
+                          {
+                            onError: (e) =>
+                              toast.error(
+                                e instanceof Error
+                                  ? e.message
+                                  : "Could not kick Jalca",
+                              ),
+                          },
+                        );
+                        return;
+                      }
+                      castKickVote.mutate({ principal, target });
+                    }}
                     onWithdrawKickVote={(target) =>
                       withdrawKickVote.mutate({ principal, target })
                     }
