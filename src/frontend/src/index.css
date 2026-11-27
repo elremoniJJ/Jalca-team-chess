@@ -4996,3 +4996,23 @@
 }
 /* === End Burning Wizard Animation Feature === */
 /* === End Spell-Effect Overlay Feature === */
+
+/* === Spell video overlay === */
+.spell-video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 21;
+  pointer-events: none;
+  object-fit: cover;
+  object-position: 50% 35%;
+  image-rendering: pixelated;
+  opacity: 0.92;
+  border-radius: 0.75rem;
+  animation: spell-video-in 0.25s ease-out;
+}
+@keyframes spell-video-in {
+  from { opacity: 0; }
+  to { opacity: 0.92; }
+}
+/* === End Spell video overlay === */

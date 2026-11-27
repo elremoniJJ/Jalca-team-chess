@@ -1058,6 +1058,7 @@ service : {
   savePrizeAllocation: (sunday: Timestamp, poolE8s: nat) ->
    (AllocationResult);
   schema: () -> (text) query;
+  seedStorySections: (texts: vec text) -> (nat);
   setApprovalGranted: (player: PseudoPrincipal, granted: bool) ->
    (ApprovalStateResult);
   setJalcaPrincipal: ("principal": principal) -> ();

@@ -1017,6 +1017,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'schema' : IDL.Func([], [IDL.Text], ['query']),
+    'seedStorySections' : IDL.Func([IDL.Vec(IDL.Text)], [IDL.Nat], []),
     'setApprovalGranted' : IDL.Func(
         [PseudoPrincipal, IDL.Bool],
         [ApprovalStateResult],

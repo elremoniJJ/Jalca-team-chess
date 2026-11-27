@@ -88,6 +88,9 @@ export function describeMintOutcome(outcome: MintOutcome): {
 
 /** Map a backend skip reason string to plain language. */
 function describeSkipReason(reason: string): string {
+  if (reason.includes("nothing rolled")) {
+    return "Sorry, missed the coin flip";
+  }
   if (reason.includes("stale heartbeat")) {
     return "Skipped — heartbeat was stale at game conclusion";
   }

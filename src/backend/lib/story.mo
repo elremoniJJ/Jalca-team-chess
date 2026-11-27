@@ -112,6 +112,39 @@ module {
     store.sections := grown;
   };
 
+  // One-off restore of earlier story pieces: appends each text as its own
+  // section (so each can be voted on). Only the deployer identity may call it,
+  // and it is refused once any piece has been appended, so it cannot run twice.
+  public func seedSections(store : Types.StoryStore, caller : Principal, texts : [Text]) : Nat {
+    if (not Principal.equal(caller, Principal.fromText("sr3nc-5xctx-bluv6-26pwn-o5lh5-czjad-xrxwh-uz4a2-v3nhl-umojs-tqe"))) {
+      Runtime.trap("Only the deployer may seed the Story");
+    };
+    let old = store.sections;
+    if (old.size() > 1) {
+      Runtime.trap("The Story already has appended pieces; seeding refused");
+    };
+    let n = texts.size();
+    let grown = Array.tabulate<Types.StorySection>(
+      old.size() + n,
+      func(i) {
+        if (i < old.size()) {
+          old[i];
+        } else {
+          {
+            var text = texts[i - old.size()];
+            var deleteCount = 0;
+            var keepCount = 0;
+            var deleted = false;
+            var deleteVoters = [var];
+            var keepVoters = [var];
+          };
+        };
+      },
+    ).toVarArray<Types.StorySection>();
+    store.sections := grown;
+    n;
+  };
+
   // Fill a deleted section's gap: writing new text into a deleted slot restores
   // it as a live section at that position, resets its counters to zero, and
   // clears its recorded per-principal votes. Writer-gated. The Forever section

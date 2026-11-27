@@ -837,6 +837,7 @@ export interface _SERVICE {
   'runMaintenance' : ActorMethod<[Timestamp], undefined>,
   'savePrizeAllocation' : ActorMethod<[Timestamp, bigint], AllocationResult>,
   'schema' : ActorMethod<[], string>,
+  'seedStorySections' : ActorMethod<[Array<string>], bigint>,
   'setApprovalGranted' : ActorMethod<
     [PseudoPrincipal, boolean],
     ApprovalStateResult

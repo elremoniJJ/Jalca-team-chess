@@ -161,6 +161,20 @@ const SPELL_EFFECT_BALLS: Record<string, string> = {
   "Shiny Balls": "shiny",
 };
 
+/** Spells whose effect is a short low-resolution video instead of the burning
+ * pre-roll and the still image. The video covers the whole board, plays once,
+ * silent. If the video cannot load, the board falls back to the usual images. */
+const SPELL_VIDEOS: Record<string, string> = {
+  Lazarus: "/assets/videos/summon-bishop.mp4",
+};
+
+/** The video for a fired cast, or null when the cast has none. */
+function spellVideoFor(burn: BurnAndPlayResult): string | null {
+  if (burn.kind === SpellKind.SubaoVe) return null;
+  if (burn.resolution?.outcome !== SpellResolutionOutcome.fired) return null;
+  return SPELL_VIDEOS[burn.spellName] ?? null;
+}
+
 /** The stable identity of a burn-and-play result: token id + spell name +
  * game number. A repeated poll of the same burn yields the same identity, so
  * the spell-effect latch and the burning sequence can both suppress restarts
@@ -542,6 +556,10 @@ export function Chessboard({
   // same lastBurnAndPlay is suppressed so the image does not restart on every
   // 1500ms poll.
   const lastSpellEffectIdRef = useRef<string | null>(null);
+  // Video spells: set when the clip cannot load (then the images are used),
+  // and the identity of the cast whose clip has finished playing.
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [videoDoneId, setVideoDoneId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!lastBurnAndPlay) return;
@@ -582,6 +600,8 @@ export function Chessboard({
       }
       const spellId = SPELL_EFFECT_IDS[latchedBurn.spellName];
       if (spellId === undefined) return null;
+      // A spell with a video shows the video instead of the image.
+      if (SPELL_VIDEOS[latchedBurn.spellName] && !videoFailed) return null;
       return { id: burnId, className: `spell-effect-${spellId}` };
     }
     if (resolution?.outcome === SpellResolutionOutcome.cancelled) {
@@ -591,7 +611,24 @@ export function Chessboard({
     }
     // Legacy (or any other no-board-effect cast) shows no image.
     return null;
-  }, [latchedBurn]);
+  }, [latchedBurn, videoFailed]);
+
+  // The video for the latched cast, if it has one and it has not failed.
+  const spellVideo = useMemo(() => {
+    if (!latchedBurn || videoFailed) return null;
+    const src = spellVideoFor(latchedBurn);
+    if (!src) return null;
+    return { id: burnIdentity(latchedBurn), src };
+  }, [latchedBurn, videoFailed]);
+  const spellVideoPlaying = !!spellVideo && spellVideo.id !== videoDoneId;
+
+  // Safety net: if the clip never reports that it ended, clear it after 8s.
+  useEffect(() => {
+    if (!spellVideo) return;
+    const id = spellVideo.id;
+    const t = window.setTimeout(() => setVideoDoneId(id), 8000);
+    return () => window.clearTimeout(t);
+  }, [spellVideo]);
 
   /* ---------------------------------------------------------------- */
   /* Burning-wizard pre-roll (burn pending)                           */
@@ -647,10 +684,12 @@ export function Chessboard({
     const burnId = burnIdentity(lastBurnAndPlay);
     if (burnId === burningBurnIdRef.current) return;
     burningBurnIdRef.current = burnId;
+    // A video spell skips the burning pre-roll: the video is the whole effect.
+    if (!videoFailed && spellVideoFor(lastBurnAndPlay)) return;
     setBurningActive(true);
     setPrerollDone(false);
     setBurningFrame(0);
-  }, [burningPending, lastBurnAndPlay]);
+  }, [burningPending, lastBurnAndPlay, videoFailed]);
 
   // Advance one frame per second while the sequence is active, looping
   // 1 -> 2 -> 3 -> 1.
@@ -1514,6 +1553,26 @@ export function Chessboard({
                 height: `${spellEffectRect.height}px`,
               }}
               data-ocid="chess.spell_effect"
+              aria-hidden="true"
+            />
+          )}
+
+          {/* Spell video — a short, silent, low-resolution clip covering the
+              whole board (cropped to fill the square). Plays once. Falls back
+              to the usual images if it cannot load. */}
+          {spellVideo && spellVideoPlaying && cellSize > 0 && (
+            <video
+              key={spellVideo.id}
+              className="spell-video-overlay"
+              src={spellVideo.src}
+              style={{ width: `${cellSize * 8}px`, height: `${cellSize * 8}px` }}
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              onEnded={() => setVideoDoneId(spellVideo.id)}
+              onError={() => setVideoFailed(true)}
+              data-ocid="chess.spell_video"
               aria-hidden="true"
             />
           )}

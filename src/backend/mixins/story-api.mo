@@ -33,6 +33,11 @@ mixin (storyStore : Types.StoryStore) {
     Story.appendSection(storyStore, caller, text);
   };
 
+  // One-off restore of earlier story pieces (deployer only; see lib/story.mo).
+  public shared ({ caller }) func seedStorySections(texts : [Text]) : async Nat {
+    Story.seedSections(storyStore, caller, texts);
+  };
+
   // Fill a deleted section's gap, restoring it as a live section at that
   // position with counters reset to zero and recorded votes cleared.
   // Writer-gated.
