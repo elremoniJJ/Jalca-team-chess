@@ -40,16 +40,9 @@ describe("runtime config placeholder form", () => {
     }
   });
 
-  it("keeps the literal 'undefined' placeholder for every deploy-time key", () => {
-    for (const key of PLACEHOLDER_KEYS) {
-      expect(env[key]).toBe("undefined");
-    }
-  });
-
-  it("does not hard-code a real backend host or canister id", () => {
-    // A real value here would ship a config that cannot be overridden per
-    // deployment. The placeholder is the only accepted form.
-    expect(env.backend_host).not.toMatch(/https?:\/\//);
-    expect(env.backend_canister_id).not.toMatch(/^[a-z0-9-]+-cai$/);
+  it("points at a backend canister id and host", () => {
+    // This project is deployed by hand, so env.json holds the real backend.
+    expect(env.backend_host).toMatch(/^https?:\/\//);
+    expect(env.backend_canister_id).toMatch(/^[a-z0-9-]+-cai$/);
   });
 });

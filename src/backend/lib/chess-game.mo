@@ -808,6 +808,12 @@ module {
       };
       case (_) {
         // Sliding piece: walk from `from` toward `to` until reaching `to`.
+        // A target that is not on a straight line or diagonal can never be
+        // reached by the walk, so it has no path squares (the move itself is
+        // rejected later by the normal validation).
+        let adf = Int.abs(tf - ff);
+        let adr = Int.abs(tr - fr);
+        if (not (adf == 0 or adr == 0 or adf == adr)) { return [] };
         let crossed = List.empty<Nat>();
         var cf = ff + df;
         var cr = fr + dr;
@@ -977,7 +983,9 @@ module {
           if (p.color == team) {
             let dests = pseudoMoves(board, from);
             for (to in dests.values()) {
-              let move = { fromSquare = from; toSquare = to; promotion = null };
+              let promo : ?PieceType =
+                if (p.pieceType == #Pawn and (rank(to) == 0 or rank(to) == 7)) { ?#Queen } else { null };
+              let move = { fromSquare = from; toSquare = to; promotion = promo };
               if (isValidMove(board, move, team)) return true;
             };
             // Castling moves are not in pseudoMoves; check them explicitly.
@@ -1027,7 +1035,9 @@ module {
           if (p.color == team) {
             let dests = pseudoMoves(board, from);
             for (to in dests.values()) {
-              let move = { fromSquare = from; toSquare = to; promotion = null };
+              let promo : ?PieceType =
+                if (p.pieceType == #Pawn and (rank(to) == 0 or rank(to) == 7)) { ?#Queen } else { null };
+              let move = { fromSquare = from; toSquare = to; promotion = promo };
               if (isValidMoveWithBlocked(board, move, team, blockedSquares)) return true;
             };
             // Castling moves are not in pseudoMoves; check them explicitly.

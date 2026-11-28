@@ -256,7 +256,14 @@ vi.mock("@/hooks/use-voting", () => ({
   }),
 }));
 
+vi.mock("@/hooks/use-resign", () => ({
+  useResignState: () => null,
+  useCastResignVote: () => ({ mutate: vi.fn(), isPending: false }),
+  useWithdrawResignVote: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+vi.mock("@/hooks/use-board-frames", () => ({ useBoardFrames: () => null }));
 vi.mock("@/hooks/use-kick", () => ({
+  useKickBot: () => ({ mutate: vi.fn(), isPending: false, isError: false, error: null, reset: vi.fn() }),
   useKickState: () => ({ kickState: null, isLoading: false, error: null }),
   useCastKickVote: () => ({
     mutate: vi.fn(),

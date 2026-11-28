@@ -7,6 +7,7 @@ import {
   Team,
 } from "../backend";
 import { legacyReasonText } from "../oisy-burn/types";
+import { spellTypeLevel } from "../lib/spell-type-level";
 
 /*
  * BurnPlayToast — a self-contained, dedicated toast container for the
@@ -62,25 +63,6 @@ interface BurnPlayToastProps {
 
 function teamLabel(team: Team): string {
   return team === Team.White ? "White" : "Black";
-}
-
-/*
- * Spell kind rendering — the backend SpellKind union is a value enum
- * (SubaoVe / Minor / Major). Subao Ve is the defensive shield spell; the
- * other two are offensive. The label is player-facing and keeps the
- * conventional "Subao Ve" spacing.
- */
-function spellKindLabel(kind: SpellKind): string {
-  switch (kind) {
-    case SpellKind.SubaoVe:
-      return "Subao Ve";
-    case SpellKind.Minor:
-      return "Minor";
-    case SpellKind.Major:
-      return "Major";
-    case SpellKind.Balls:
-      return "Balls";
-  }
 }
 
 /*
@@ -166,6 +148,10 @@ export function BurnPlayToast({ toasts, onClose }: BurnPlayToastProps) {
       <div className="burn-play-toast-scroll momentum-scroll">
         {toasts.map((toast, index) => {
           const { result } = toast;
+          const typeLine =
+            result.kind === SpellKind.SubaoVe
+              ? null
+              : spellTypeLevel(result.spellName);
           const gameNumber =
             result.gameNumber !== undefined
               ? `Game ${result.gameNumber.toString()}`
@@ -196,7 +182,7 @@ export function BurnPlayToast({ toasts, onClose }: BurnPlayToastProps) {
                     Burned &amp; played
                   </span>
                   <span className="burn-play-toast-headline">
-                    {result.spellName} — {spellKindLabel(result.kind)}
+                    {result.spellName}{typeLine ? ` — ${typeLine}` : ""}
                   </span>
                   <span className="burn-play-toast-detail">
                     {Number(result.tokenId) >= 999999999999

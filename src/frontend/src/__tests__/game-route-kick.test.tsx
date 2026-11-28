@@ -200,7 +200,14 @@ vi.mock("@/hooks/use-voting", () => ({
 // The kick hooks: useKickState returns a controllable kick state, and the
 // cast/withdraw mutations expose their mutate spies so the test can assert
 // the route wires the PlayerList buttons to the backend mutations.
+vi.mock("@/hooks/use-resign", () => ({
+  useResignState: () => null,
+  useCastResignVote: () => ({ mutate: vi.fn(), isPending: false }),
+  useWithdrawResignVote: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+vi.mock("@/hooks/use-board-frames", () => ({ useBoardFrames: () => null }));
 vi.mock("@/hooks/use-kick", () => ({
+  useKickBot: () => ({ mutate: vi.fn(), isPending: false, isError: false, error: null, reset: vi.fn() }),
   useKickState: () => ({ kickState: null, isLoading: false, error: null }),
   useCastKickVote: () => ({
     mutate: castKickVoteMutate,

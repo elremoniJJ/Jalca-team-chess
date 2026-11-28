@@ -184,7 +184,6 @@ function stubMatchMedia(reducedMotion: boolean) {
 
 /** The three new summon spells and the overlay class each must render. */
 const SUMMON_SPELLS: Array<[string, number]> = [
-  ["Lazarus", 23],
   ["Cuoclot Sac Wonmuc Rook", 24],
   ["Anne Boleyn", 25],
 ];
@@ -224,6 +223,17 @@ describe("Chessboard summon-spell post-pre-roll image", () => {
 
       unmount();
     }
+  });
+
+  it("plays the Lazarus video instead of the pre-roll and the image", () => {
+    const { container } = renderBoard(firedSummonResult("Lazarus"));
+    expect(
+      container.querySelector('[data-ocid="chess.spell_video"]'),
+    ).not.toBeNull();
+    expect(spellOverlay(container)).toBeNull();
+    expect(
+      container.querySelector('[data-ocid="chess.burning_wizard"]'),
+    ).toBeNull();
   });
 
   it("keeps the summon spell image visible for its own window after handoff", () => {

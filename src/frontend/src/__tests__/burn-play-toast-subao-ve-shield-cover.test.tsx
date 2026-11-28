@@ -95,7 +95,7 @@ describe("burn-and-play toast Subao Ve shield contribution", () => {
       />,
     );
 
-    expect(screen.getByText("Subao Ve — Subao Ve")).toBeInTheDocument();
+    expect(screen.getByText("Subao Ve")).toBeInTheDocument();
     expect(screen.getByText(/NFT #42/)).toBeInTheDocument();
     expect(screen.getByText(/Game 7/)).toBeInTheDocument();
   });

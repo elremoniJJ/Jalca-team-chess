@@ -182,7 +182,7 @@ describe("burn-and-play toast adjacent invariants for the Subao Ve wording chang
       />,
     );
 
-    expect(screen.getByText("Minor Spell — Minor")).toBeInTheDocument();
+    expect(screen.getByText("Minor Spell")).toBeInTheDocument();
     expect(screen.getByText(/NFT #42/)).toBeInTheDocument();
     expect(screen.getByText(/White/)).toBeInTheDocument();
     expect(screen.getByText("Burned & played")).toBeInTheDocument();

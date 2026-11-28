@@ -616,7 +616,9 @@ module {
     if (spells.size() == 0) {
       return null;
     };
-    let entry = spells[q % spells.size()];
+    // The spell uses the digits the kind pick did not (q / number of kinds),
+    // so the two picks are independent and every spell in a kind can come up.
+    let entry = spells[(q / categories.size()) % spells.size()];
     ?{ category = dropCategoryOf(entry.category); entry };
   };
 

@@ -75,7 +75,7 @@ describe("BurnPlayToast rendering", () => {
       />,
     );
 
-    expect(screen.getByText("Minor Spell — Minor")).toBeInTheDocument();
+    expect(screen.getByText("Minor Spell")).toBeInTheDocument();
     expect(screen.getByText(/NFT #42/)).toBeInTheDocument();
     expect(screen.getByText("Burned & played")).toBeInTheDocument();
   });
@@ -143,7 +143,7 @@ describe("BurnPlayToast rendering", () => {
       <BurnPlayToast toasts={[makeEntry("burn-1", balls)]} onClose={vi.fn()} />,
     );
 
-    expect(screen.getByText("Sandy Balls — Balls")).toBeInTheDocument();
+    expect(screen.getByText("Sandy Balls")).toBeInTheDocument();
     expect(
       screen.getByText(/Fired on the board — 3 vs Black shield 1 → 0\./),
     ).toBeInTheDocument();
@@ -194,8 +194,8 @@ describe("BurnPlayToast rendering", () => {
       />,
     );
 
-    expect(screen.getByText("Minor Spell — Minor")).toBeInTheDocument();
-    expect(screen.getByText("Major Spell — Major")).toBeInTheDocument();
+    expect(screen.getByText("Minor Spell")).toBeInTheDocument();
+    expect(screen.getByText("Major Spell")).toBeInTheDocument();
     expect(screen.getByText(/NFT #1/)).toBeInTheDocument();
     expect(screen.getByText(/NFT #2/)).toBeInTheDocument();
   });

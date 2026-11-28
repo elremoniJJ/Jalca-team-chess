@@ -10,8 +10,8 @@ import type { GameRecord } from "../types/chess";
  * usePieceVoices — speaks the named chess pieces' lines.
  *
  *  - Plain move:  the mover says its "move" line.
- *  - Capture:     the capturer says its "capture" line, THEN the captured
- *                 piece says its "captured" line.
+ *  - Capture:     the capturer says its "capture" line (the captured piece
+ *                 stays silent, so only one voice speaks per move).
  *  - Checkmate:   the losing King then says its "captured" line.
  *
  * It works from the game record (every move of the current game), so it also
@@ -51,9 +51,7 @@ export function usePieceVoices(record: GameRecord | null): void {
         const clips: VoiceClip[] = [];
         if (m.captured !== null) {
           if (ids.moverId) clips.push({ id: ids.moverId, event: "capture" });
-          if (ids.capturedId) {
-            clips.push({ id: ids.capturedId, event: "captured" });
-          }
+          // The captured piece no longer answers: one voice per move.
         } else if (ids.moverId) {
           clips.push({ id: ids.moverId, event: "move" });
         }

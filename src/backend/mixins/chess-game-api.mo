@@ -79,6 +79,11 @@ mixin (
   // in progress ensureBot leaves him out; the flag is cleared when the next
   // game starts, so he rejoins every new game.
   transient var botKickedThisGame : Bool = false;
+  // Jalca's pace: the number of recorded moves when he last cast a spell, and
+  // when. His spell is followed by at least 4 seconds of quiet before his move,
+  // and he never acts sooner than 2 seconds after his turn begins.
+  transient var botSpellMoves : ?Nat = null;
+  transient var botSpellAtNs : Int = 0;
 
   // Move-in-progress guard: true while an attemptMove is mid-flight (between
   // the guard set and its clear). Prevents a second concurrent attemptMove
@@ -427,7 +432,6 @@ mixin (
   func startNewGame(now : Types.Timestamp) : async () {
     // Make sure the bot is present and fresh before the start rule is checked.
     await ensureBot(now);
-    Debug.print("[start] startNewGame running, gateOk=" # debug_show (gateOk()));
     // Balance guard — validate BEFORE mutating any state. The guard counts
     // HUMANS only (the single bot is excluded): a game needs one human per
     // team, so the bot plus one human must NOT start a game. Without this the
@@ -612,6 +616,7 @@ mixin (
       Guaranteed.clearAll(guaranteedStore);
       // Fresh history of board positions for the replay buttons.
       botKickedThisGame := false;
+      botSpellMoves := null;
       BoardFrames.reset(boardFrames);
       BoardFrames.addStart(boardFrames, gameState.board, gameState.openingName);
       gameState.gamePhase := #Playing;
@@ -1191,7 +1196,6 @@ mixin (
     // readiness via the "New game" button / re-login). The modal does not
     // auto-dismiss; players linger on it until they explicitly choose New game
     // or Log out.
-    if (gateOk() or newGameStarting) Debug.print("[start] celebration over: gateOk=" # debug_show (gateOk()) # " alreadyStarting=" # debug_show newGameStarting);
     if (gateOk()) {
       // Fix B: re-entry guard — if a startNewGame is already mid-flight
       // (another message reached this branch first and is awaiting inside
@@ -1282,11 +1286,11 @@ mixin (
     };
     if (gameState.gamePhase != #Playing) return;
     if (not botIsMoveMaker()) return;
-    Debug.print("[bot] my turn, trying to move");
     if (moveInProgress) {
-      Debug.print("[bot] skipped: a move is already in progress");
       return;
     };
+    // Not sooner than 2 seconds after his turn began; the next tick tries again.
+    if (Time.now() - gameState.turnStartTime < 2_000_000_000) { return };
     try {
       let r = await Random.natRange(0, 1_000_000_000_000);
       // Low digits steer the move, high digits steer the spell.
@@ -1307,7 +1311,7 @@ mixin (
         case null 0;
       };
       var gameEnded = false;
-      if (gameState.spellUseEnabled and botTurns >= 2 and not burnStore.state.burnOccurredThisTurn) {
+      if (gameState.spellUseEnabled and botTurns >= 2 and not (botSpellMoves == ?recorder.moves.size())) {
         let spellMine = ChessGame.materialOf(gameState.board, spellTeam);
         let spellTheirs = ChessGame.materialOf(gameState.board, ChessGame.opponent(spellTeam));
         // Bored? After 35 moves each he only wants queens.
@@ -1323,6 +1327,8 @@ mixin (
             switch (if (bored) { BotSpells.boredSpell(gameState.board, spellTeam) } else { BotSpells.pickSpell(gameState.board, spellTeam, lo, hi, rSpell) }) {
               case (?sp) {
                 let power = BotSpells.powerFor(rSpell);
+                botSpellMoves := ?recorder.moves.size();
+                botSpellAtNs := Time.now();
                 let cast = ShieldResolution.botCast(shieldResolutionStore, burnStore, gameState, spellTeam, sp.name, sp.kind, power);
                 BoardFrames.addSpell(boardFrames, gameState.board, "Jalca (" # BoardFrames.teamName(spellTeam) # ")", sp.name, switch (cast.resolution) { case (?x) x.firesOnBoard; case null true });
                 Debug.print("[bot] cast " # sp.name # " (level " # Nat.toText(sp.level) # ", power " # Nat.toText(power) # "), fired=" # debug_show (switch (cast.resolution) { case (?x) x.firesOnBoard; case null false }));
@@ -1339,20 +1345,22 @@ mixin (
                   };
                 };
               };
-              case null { Debug.print("[bot] no useful spell in range") };
+              case null {};
             };
           };
           case null {};
         };
       };
       if (gameEnded or gameState.gamePhase != #Playing) return;
+      // At least 4 seconds between his spell and his move: the move waits for
+      // a later tick, so the spell (and its video) can be seen first.
+      if (botSpellMoves == ?recorder.moves.size() and Time.now() - botSpellAtNs < 4_000_000_000) { return };
 
       let legal = ChessGame.allLegalMovesWithBlocked(
         gameState.board,
         gameState.currentTurn,
         gameState.spellBoardState.blockedSquares,
       );
-      Debug.print("[bot] legal moves found: " # Nat.toText(legal.size()));
       if (legal.size() == 0) return;
       let me = gameState.currentTurn;
       let mine = ChessGame.materialOf(gameState.board, me);
@@ -1365,15 +1373,14 @@ mixin (
         else { #Aggressive };
       let safetyOn = recorder.moves.size() <= ChessGame.botSafetyPlies;
       var chosen : (Types.Move, Text) = (legal[rMove % legal.size()], "random");
-      let cost = IC.countInstructions(func() {
+      ignore IC.countInstructions(func() {
         chosen := ChessGame.chooseBotMove(gameState.board, me, gameState.spellBoardState.blockedSquares, legal, style, safetyOn, rMove);
       });
-      Debug.print("[bot] material " # Nat.toText(mine) # " vs " # Nat.toText(theirs) # ", choice: " # chosen.1 # ", cost " # Nat64.toText(cost) # " instr");
       let m = chosen.0;
       let res = await attemptMove(botRosterKey(), m.fromSquare, m.toSquare, m.promotion);
       switch (res) {
         case (#err(msg)) { Debug.print("[bot] move rejected: " # msg) };
-        case (_) { Debug.print("[bot] move played") };
+        case (_) {};
       };
     } catch (e) {
       Debug.print("[bot] error: " # Error.message(e));

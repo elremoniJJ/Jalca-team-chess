@@ -166,6 +166,7 @@ const SPELL_EFFECT_BALLS: Record<string, string> = {
  * silent. If the video cannot load, the board falls back to the usual images. */
 const SPELL_VIDEOS: Record<string, string> = {
   Lazarus: "/assets/videos/summon-bishop.mp4",
+  "Hipsy Titam": "/assets/videos/summon-knight.mp4",
 };
 
 /** The video for a fired cast, or null when the cast has none. */

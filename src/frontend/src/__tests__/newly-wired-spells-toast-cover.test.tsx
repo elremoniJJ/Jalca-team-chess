@@ -36,6 +36,7 @@ import {
   Team,
 } from "@/backend";
 import { BurnPlayToast } from "@/components/BurnPlayToast";
+import { spellTypeLevel } from "@/lib/spell-type-level";
 import type { BurnPlayToastEntry } from "@/components/BurnPlayToast";
 
 /** The seven newly-wired spells with their burn kind and token id. */
@@ -130,8 +131,9 @@ describe("burn-and-play toast for the newly-wired spells", () => {
       );
 
       // The headline is the spell name plus its kind label, unchanged.
+      const typeLine = spellTypeLevel(spell.name);
       expect(
-        screen.getByText(`${spell.name} — ${spell.kind}`),
+        screen.getByText(typeLine ? `${spell.name} — ${typeLine}` : spell.name),
       ).toBeInTheDocument();
       // The fired resolution line is the same shield math as any other spell.
       expect(
@@ -177,7 +179,7 @@ describe("burn-and-play toast for the newly-wired spells", () => {
       />,
     );
 
-    expect(screen.getByText("Bendika — Major")).toBeInTheDocument();
+    expect(screen.getByText("Bendika — Necromancy · Mastery")).toBeInTheDocument();
     expect(screen.getByText(/NFT #3/)).toBeInTheDocument();
     expect(screen.getByText("Burned & played")).toBeInTheDocument();
   });
